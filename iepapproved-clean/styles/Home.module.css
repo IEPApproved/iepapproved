@@ -77,7 +77,7 @@
 .stepsGrid { display:grid; grid-template-columns:repeat(3,1fr); gap:28px; }
 .stepCard { background:#fff; border-radius:16px; padding:32px; border:1px solid var(--lavender-mid); transition:transform 0.2s, box-shadow 0.2s; }
 .stepCard:hover { transform:translateY(-4px); box-shadow:0 16px 40px rgba(45,27,78,0.10); }
-.stepNum { font-family:'Cormorant Garamond',serif; font-size:48px; font-weight:700; color:var(--lavender-mid); line-height:1; margin-bottom:16px; }
+.stepNum { font-family:'Cormorant Garamond',serif; font-size:48px; font-weight:700; color:var(--plum); line-height:1; margin-bottom:16px; }
 .stepIcon { width:48px; height:48px; background:var(--gold-pale); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px; margin-bottom:16px; }
 .stepTitle { font-size:18px; font-weight:700; color:var(--plum); margin-bottom:10px; }
 .stepDesc { font-size:14px; color:var(--muted); line-height:1.65; }
