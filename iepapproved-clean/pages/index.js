@@ -12,14 +12,12 @@ export default function Home() {
         <meta name="description" content="Ada is your AI-powered guide to IEP law, IDEA, and ADA. Ask any question about your child's education rights and get a real answer — with the law to back it up." />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
-        {/* Open Graph */}
         <meta property="og:title" content="IEP Approved — Know Your Child's Rights" />
         <meta property="og:description" content="Ada is your AI-powered guide to IEP law, IDEA, and ADA." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://iepapproved.com" />
       </Head>
 
-      {/* NAV */}
       <nav className={styles.nav}>
         <a href="#" className={styles.navLogo}>IEP <span>Approved</span></a>
         <ul className={styles.navLinks}>
@@ -31,7 +29,6 @@ export default function Home() {
         </ul>
       </nav>
 
-      {/* HERO */}
       <section className={styles.hero}>
         <div className={styles.heroInner}>
           <div className={styles.heroLeft}>
@@ -62,10 +59,11 @@ export default function Home() {
             </div>
           </div>
 
-          {/* ADA PREVIEW CARD */}
           <div className={styles.adaCard}>
             <div className={styles.adaHeader}>
-              <div className={styles.adaAvatar}>A</div>
+              <div className={styles.adaAvatar}>
+                <img src="/ada-avatar.png" alt="Ada" style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}} />
+              </div>
               <div className={styles.adaTitle}>
                 <strong>Ada</strong>
                 <span>IEP Approved AI Guide</span>
@@ -92,29 +90,26 @@ export default function Home() {
               </button>
             </div>
             <div className={styles.adaDisclaimer}>Not legal advice. Always consult an attorney for your specific situation.</div>
-<div style={{marginTop:'10px', padding:'8px 12px', background:'rgba(212,168,67,0.15)', border:'1px solid rgba(212,168,67,0.3)', borderRadius:'8px', fontSize:'11px', color:'#D4A843', textAlign:'center'}}>
-  🇪🇸 ¿Hablas español? Ada también — solo pregúntale en español.
-</div>
+            <div style={{marginTop:'10px', padding:'8px 12px', background:'rgba(212,168,67,0.15)', border:'1px solid rgba(212,168,67,0.3)', borderRadius:'8px', fontSize:'11px', color:'#D4A843', textAlign:'center'}}>
+              🇪🇸 ¿Hablas español? Ada también — solo pregúntale en español.
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ORIGIN STRIP */}
       <div className={styles.originStrip}>
-        <p>&ldquo;We don&apos;t teach parents to fight. We teach them to partner. The seat at the table is already yours — knowledge gives you the voice to use it.&rdquo;</p>
+        <p>&ldquo;Knowledge is power. Partnership is progress. Together — the IEP gets APPROVED.&rdquo;</p>
       </div>
 
-      {/* HOW IT WORKS */}
       <section className={styles.section} id="how-it-works">
         <div className={styles.sectionInner}>
           <span className={styles.sectionLabel}>How It Works</span>
           <h2 className={styles.sectionTitle}>From lost to informed<br />in minutes.</h2>
           <p className={styles.sectionSub}>You don&apos;t need a law degree. You need Ada — and the confidence to walk into that meeting knowing your rights.</p>
-
           <div className={styles.stepsGrid}>
             {[
-              { num: '01', icon: '💬', title: 'Ask Ada anything', desc: 'Type your question in plain English. "Can they change my child\'s placement without telling me?" "What is FAPE?" "Am I allowed to record IEP meetings?" Ada understands.' },
-              { num: '02', icon: '⚖️', title: 'Get the law, not just an opinion', desc: 'Ada cites the specific statute — IDEA, ADA, Section 504 — so you can walk into any meeting and quote chapter and verse. No more guessing.' },
+              { num: '01', icon: '💬', title: 'Ask Ada anything', desc: 'Type your question the way you\'d ask a trusted friend. Ada will find the answers and resources you need. No need to be formal — just ask.' },
+              { num: '02', icon: '⚖️', title: 'Get the law, not just an opinion', desc: 'Ada cites the specific statute — IDEA, ADA, Section 504 — so you can walk into any meeting and know exactly where the law stands. No more guessing.' },
               { num: '03', icon: '🛡️', title: 'Advocate with confidence', desc: 'Use Ada\'s answers to write letters, prepare for meetings, and push back when the school says no. Knowledge is the difference between a "no" and a "yes."' },
             ].map(step => (
               <div key={step.num} className={styles.stepCard}>
@@ -128,19 +123,19 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ADA SECTION */}
       <section className={styles.adaSection} id="ada">
         <div className={styles.sectionInner}>
           <div className={styles.adaTwoCol}>
             <div>
               <span className={styles.sectionLabel}>Meet Ada</span>
               <h2 className={`${styles.sectionTitle} ${styles.onPlum}`}>Your AI guide to IEP law.</h2>
-              <p className={`${styles.sectionSub} ${styles.onPlumSub}`}>Ada knows IDEA, ADA, and Section 504 — and she explains it like a friend who happens to be a lawyer.</p>
+              <p className={`${styles.sectionSub} ${styles.onPlumSub}`}>Ada knows IDEA, ADA, and Section 504 — and she&apos;s here to help you understand your child&apos;s rights, every step of the way.</p>
               <div className={styles.adaFeatureList}>
                 {[
-                  { title: 'Cites the exact law', desc: 'Every answer references the specific federal statute — not just general advice.' },
-                  { title: 'Plain English, always', desc: 'No legal jargon. Ada explains what it means for your specific situation.' },
-                  { title: 'Honest about limits', desc: "When you need a real attorney, Ada will tell you. No false confidence." },
+                  { title: 'Cites the exact law', desc: 'Every answer references the specific federal statute — so you know exactly where the law stands.' },
+                  { title: 'Just ask — Ada understands', desc: 'Type your question the way you\'d ask a trusted friend. Ada will find the answers and resources you need. No need to be formal — just ask.' },
+                  { title: 'Honest about limits', desc: 'When you need a real attorney, Ada will tell you. No false confidence.' },
+                  { title: '¿Hablas español? Ada también.', desc: 'Puedes escribirle a Ada en español — ella te responderá en español con la información que necesitas.' },
                 ].map(f => (
                   <div key={f.title} className={styles.adaFeatureItem}>
                     <span className={styles.checkmark}>✓</span>
@@ -175,12 +170,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* PRICING */}
       <section className={styles.pricingSection} id="pricing">
         <div className={styles.sectionInner}>
           <span className={styles.sectionLabel}>Pricing</span>
-          <h2 className={`${styles.sectionTitle} ${styles.onPlum}`}>Knowledge shouldn&apos;t have a<br />price barrier.</h2>
-          <p className={`${styles.sectionSub} ${styles.onPlumSub}`}>Start free. Upgrade when you need more.</p>
+          <h2 className={`${styles.sectionTitle} ${styles.onPlum}`}>Ada is free. Always.</h2>
+          <p className={`${styles.sectionSub} ${styles.onPlumSub}`}>Additional resources, tools, and community are here when you&apos;re ready for more support.</p>
           <div className={styles.pricingGrid}>
             <div className={styles.pricingCard}>
               <div className={styles.priceLabel}>Free</div>
@@ -199,7 +193,7 @@ export default function Home() {
               <div className={styles.pricePeriod}>per month · cancel anytime</div>
               <div className={styles.priceDesc}>For the parent who is ready to walk into every IEP meeting as the most prepared person in the room.</div>
               <ul className={styles.priceFeatures}>
-                {['Everything in Free','Meeting prep checklists by disability','Document & letter templates','Ada with state law knowledge','Priority response'].map(f => <li key={f} className={styles.priceFeature}>{f}</li>)}
+                {['Everything in Free','Meeting prep checklists by disability','Document & letter templates','Ada with state law knowledge','State-based parent community access','Connect with families in your area','Playdates, meetups & local connections'].map(f => <li key={f} className={styles.priceFeature}>{f}</li>)}
               </ul>
               <a href="/signup?plan=pro" className={styles.btnPricingPlum}>Start IEP Pro →</a>
             </div>
@@ -217,61 +211,64 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ORIGIN STORY */}
       <section className={styles.originSection} id="about">
         <div className={styles.originInner}>
           <div>
+            <img
+              src="/kim-and-robbie.jpg"
+              alt="Kimberly and Robbie"
+              style={{width:'100%', maxWidth:'460px', borderRadius:'20px', border:'4px solid #D4A843', boxShadow:'0 20px 60px rgba(45,27,78,0.15)', display:'block', marginBottom:'32px'}}
+            />
             <blockquote className={styles.originQuote}>
-  The right words — at the right time — can completely change your future.
-</blockquote>
+              We don&apos;t teach parents to fight. We teach them to partner. The seat at the table is already yours — knowledge gives you the voice to use it.
+            </blockquote>
             <div className={styles.originSig}>
               <div className={styles.originSigAvatar}>K</div>
               <div>
                 <div className={styles.originSigName}>Kimberly</div>
-<div className={styles.originSigTitle}>Robbie&apos;s Mom and Founder of IEP Approved</div>
+                <div className={styles.originSigTitle}>Robbie&apos;s Mom and Founder of IEP Approved</div>
               </div>
             </div>
           </div>
           <div className={styles.originText}>
-  <span className={styles.sectionLabel}>Our Story</span>
-  <p>The first question I get asked — more than any other — is: <em>did you know?</em></p>
-  <p>No. I didn&apos;t know.</p>
-  <p>Robbie&apos;s diagnosis came when he was a week old. The doctor was in a rush. I was in the bathroom. He delivered the news quickly, through a closed door — I could hear the awkward sadness in his voice. He took the easy way out. It was a hit and run.</p>
-  <p>When I walked out of that bathroom and made my way down the hall to the nursery, something had shifted. The looks of congratulations and excitement that had greeted me all week were gone. In their place was pity. Averted eyes. Uncomfortable silence. They had all known. They had been avoiding me all morning, waiting for the doctor to deliver his news.</p>
-  <p>When I asked why no one had prepared me — so I could be truly present for that moment — I was told: <em>&ldquo;That&apos;s not my job. The doctor has to give you results.&rdquo;</em></p>
-  <p>They were right. It wasn&apos;t their job to give me the results. But it was absolutely their job to make sure I had support. That I wasn&apos;t alone. That resources were available to me the moment I needed them.</p>
-  <p>One nurse, with the best of intentions, said: <em>&ldquo;Why do bad things happen to good people?&rdquo;</em></p>
-  <p>I want to be clear about something: Robbie is not a bad thing. He never was.</p>
-  <p>I was sitting in the nursery holding him for the first time since the diagnosis — and I needed to say it out loud. The doctor and staff had left it for me to tell Robbie&apos;s dad. I needed to hear myself say the words. I called my father. I was crying hysterically.</p>
-  <p><em>&ldquo;Kimberly — what&apos;s wrong?&rdquo;</em></p>
-  <p><em>&ldquo;Robbie has Down syndrome.&rdquo;</em></p>
-  <p>There was a pause. Then a deep sigh. And then he said something I did not expect — something that snapped me out of my tailspin and brought me back to earth.</p>
-  <p><em>&ldquo;Oh — thank God. Kimberly, of all the things that doctor could have walked into that room and told you today, this is the best news you&apos;ve ever gotten. So what — he&apos;s still going to do all the things. He&apos;s premature, three pounds, struggling to breathe on his own. If you leave that hospital and the only thing he has is Down syndrome — you&apos;re winning.&rdquo;</em></p>
-  <p>And he was right.</p>
-  <p>That moment taught me everything I needed to know about the power of words. The right ones — at the right time — from someone who loves you — can completely change your future. They can pull you back from the edge of fear and plant you firmly in possibility.</p>
-  <p>That&apos;s the energy IEP Approved was built on.</p>
-  <p>Just because an outcome isn&apos;t what you expected does not mean it has to be hard, impossible, or negative. How we communicate with each other — the words we choose, the support we offer, the resources we make available — has the greatest impact on how we move forward. Community, knowledge, and access to the right resources can completely change your outlook. They can change your future.</p>
-  <p>My first IEP meeting was no different.</p>
-  <p>We lived in a rural area. Daycare options that could meet Robbie&apos;s needs were limited. When busing became a barrier — too far, the administrator said — she wanted to know if I was going to drive him myself.</p>
-  <p>I said no.</p>
-  <p>Access to a free and appropriate public education is Robbie&apos;s right under IDEA. His right to transportation is part of that. The school system needed to meet its obligation.</p>
-  <p>The administrator was frustrated. She told me — this mom, sitting across from her — that Robbie was going to have a lot of needs like this, and suggested I consider quitting my job to be more present. To transport him myself.</p>
-  <p>I asked her if she asked every parent that question.</p>
-  <p>Then I told her: No. I would continue to be a parent who works — who provides food, housing, and stability for her child. And the school system would need to meet its legal obligation.</p>
-  <p>I stayed calm. Not because it wasn&apos;t hard. But because I had knowledge. I knew the law. And knowing the law made me feel something I hadn&apos;t felt since that bathroom door swung open.</p>
-  <p><strong>Empowered.</strong></p>
-  <p>That&apos;s why IEP Approved exists.</p>
-  <p>Not to teach parents to fight — but to teach everyone at the table to partner. We built this for parents who want to walk in informed. For educators who want families to feel supported, not adversarial. For healthcare professionals who want their patients to have access to the resources and community they need to thrive.</p>
-  <p>When everyone speaks the same language — when the law is clear, the resources are accessible, and the support system is real — the outcome for the child is always better.</p>
-  <p>Because the moment you know your rights, everything changes. The conversation changes. The dynamic changes. You are no longer an outsider in your own child&apos;s education.</p>
-  <p>You belong at that table. You always did.</p>
-  <p><strong>We built IEP Approved so no parent ever has to navigate this alone.</strong></p>
-  <p><em>— Kimberly, Robbie&apos;s Mom and Founder of IEP Approved</em></p>
-</div>
+            <span className={styles.sectionLabel}>Our Story</span>
+            <p>The first question I get asked — more than any other — is: <em>did you know?</em></p>
+            <p>No. I didn&apos;t know.</p>
+            <p>Robbie&apos;s diagnosis came when he was a week old. The doctor was in a rush. I was in the bathroom. He delivered the news quickly, through a closed door — I could hear the awkward sadness in his voice. He took the easy way out. It was a hit and run.</p>
+            <p>When I walked out of that bathroom and made my way down the hall to the nursery, something had shifted. The looks of congratulations and excitement that had greeted me all week were gone. In their place was pity. Averted eyes. Uncomfortable silence. They had all known. They had been avoiding me all morning, waiting for the doctor to deliver his news.</p>
+            <p>When I asked why no one had prepared me — so I could be truly present for that moment — I was told: <em>&ldquo;That&apos;s not my job. The doctor has to give you results.&rdquo;</em></p>
+            <p>They were right. It wasn&apos;t their job to give me the results. But it was absolutely their job to make sure I had support. That I wasn&apos;t alone. That resources were available to me the moment I needed them.</p>
+            <p>One nurse, with the best of intentions, said: <em>&ldquo;Why do bad things happen to good people?&rdquo;</em></p>
+            <p>I want to be clear about something: Robbie is not a bad thing. He never was.</p>
+            <p>I was sitting in the nursery holding him for the first time since the diagnosis — and I needed to say it out loud. The doctor and staff had left it for me to tell Robbie&apos;s dad. I needed to hear myself say the words. I called my father. I was crying hysterically.</p>
+            <p><em>&ldquo;Kimberly — what&apos;s wrong?&rdquo;</em></p>
+            <p><em>&ldquo;Robbie has Down syndrome.&rdquo;</em></p>
+            <p>There was a pause. Then a deep sigh. And then he said something I did not expect — something that snapped me out of my tailspin and brought me back to earth.</p>
+            <p><em>&ldquo;Oh — thank God. Kimberly, of all the things that doctor could have walked into that room and told you today, this is the best news you&apos;ve ever gotten. So what — he&apos;s still going to do all the things. He&apos;s premature, three pounds, struggling to breathe on his own. If you leave that hospital and the only thing he has is Down syndrome — you&apos;re winning.&rdquo;</em></p>
+            <p>And he was right.</p>
+            <p>That moment taught me everything I needed to know about the power of words. The right ones — at the right time — from someone who loves you — can completely change your future. They can pull you back from the edge of fear and plant you firmly in possibility.</p>
+            <p>That&apos;s the energy IEP Approved was built on.</p>
+            <p>Just because an outcome isn&apos;t what you expected does not mean it has to be hard, impossible, or negative. How we communicate with each other — the words we choose, the support we offer, the resources we make available — has the greatest impact on how we move forward. Community, knowledge, and access to the right resources can completely change your outlook. They can change your future.</p>
+            <p>My first IEP meeting was no different.</p>
+            <p>We lived in a rural area. Daycare options that could meet Robbie&apos;s needs were limited. When busing became a barrier — too far, the administrator said — she wanted to know if I was going to drive him myself.</p>
+            <p>I said no.</p>
+            <p>Access to a free and appropriate public education is Robbie&apos;s right under IDEA. His right to transportation is part of that. The school system needed to meet its obligation.</p>
+            <p>The administrator was frustrated. She told me — this mom, sitting across from her — that Robbie was going to have a lot of needs like this, and suggested I consider quitting my job to be more present. To transport him myself.</p>
+            <p>I asked her if she asked every parent that question.</p>
+            <p>Then I told her: No. I would continue to be a parent who works — who provides food, housing, and stability for her child. And the school system would need to meet its legal obligation.</p>
+            <p>I stayed calm. Not because it wasn&apos;t hard. But because I had knowledge. I knew the law. And knowing the law made me feel something I hadn&apos;t felt since that bathroom door swung open.</p>
+            <p><strong>Empowered.</strong></p>
+            <p>That&apos;s why IEP Approved exists.</p>
+            <p>Not to teach parents to fight — but to teach everyone at the table to partner. We built this for parents who want to walk in informed. For educators who want families to feel supported, not adversarial. For healthcare professionals who want their patients to have access to the resources and community they need to thrive.</p>
+            <p>When everyone speaks the same language — when the law is clear, the resources are accessible, and the support system is real — the outcome for the child is always better.</p>
+            <p>Because the moment you know your rights, everything changes. The conversation changes. The dynamic changes. You are no longer an outsider in your own child&apos;s education.</p>
+            <p>You belong at that table. You always did.</p>
+            <p><strong>We built IEP Approved so no parent ever has to navigate this alone.</strong></p>
+            <p><em>— Kimberly, Robbie&apos;s Mom and Founder of IEP Approved</em></p>
+          </div>
         </div>
       </section>
 
-      {/* EMAIL CAPTURE */}
       <section className={styles.emailSection}>
         <span className={styles.sectionLabel} style={{display:'block',marginBottom:'12px'}}>Stay Informed</span>
         <h2 className={`${styles.sectionTitle} ${styles.onPlum}`}>Get law change alerts<br />before they affect your child.</h2>
@@ -279,12 +276,11 @@ export default function Home() {
         <EmailForm />
       </section>
 
-      {/* FOOTER */}
       <footer className={styles.footer}>
         <div className={styles.footerInner}>
           <div>
             <div className={styles.footerLogo}>IEP <span>Approved</span></div>
-            <div className={styles.footerTagline}>Knowledge is the difference between a &ldquo;no&rdquo; and a &ldquo;yes.&rdquo; Every family deserves both.</div>
+            <div className={styles.footerTagline}>Knowledge is power. Partnership is progress. Together — the IEP gets APPROVED.</div>
           </div>
           <div>
             <div className={styles.footerColTitle}>Platform</div>
