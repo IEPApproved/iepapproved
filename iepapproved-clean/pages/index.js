@@ -92,6 +92,9 @@ export default function Home() {
               </button>
             </div>
             <div className={styles.adaDisclaimer}>Not legal advice. Always consult an attorney for your specific situation.</div>
+<div style={{marginTop:'10px', padding:'8px 12px', background:'rgba(212,168,67,0.15)', border:'1px solid rgba(212,168,67,0.3)', borderRadius:'8px', fontSize:'11px', color:'#D4A843', textAlign:'center'}}>
+  🇪🇸 ¿Hablas español? Ada también — solo pregúntale en español.
+</div>
           </div>
         </div>
       </section>
@@ -219,24 +222,52 @@ export default function Home() {
         <div className={styles.originInner}>
           <div>
             <blockquote className={styles.originQuote}>
-              I was in the shower when the doctor knocked and told me my son had Down syndrome through the door. Everyone on that floor already knew. I was the only one who didn&apos;t.
-            </blockquote>
+  The right words — at the right time — can completely change your future.
+</blockquote>
             <div className={styles.originSig}>
               <div className={styles.originSigAvatar}>K</div>
               <div>
-                <div className={styles.originSigName}>Kimberly Sandro</div>
-                <div className={styles.originSigTitle}>Founder, IEP Approved · Mom to Robbie, age 12</div>
+                <div className={styles.originSigName}>Kimberly</div>
+<div className={styles.originSigTitle}>Robbie&apos;s Mom and Founder of IEP Approved</div>
               </div>
             </div>
           </div>
           <div className={styles.originText}>
-            <span className={styles.sectionLabel}>Our Story</span>
-            <p>Robbie is 12 now. He is doing all the things — and I have spent the last decade learning every law, every right, and every leverage point that families like ours have access to.</p>
-            <p>I built IEP Approved because <strong>the gap between the parent who knows and the parent who doesn&apos;t determines everything.</strong> It determines whether your child gets the services they need. Whether you fight back or go home defeated. Whether you know you can say no.</p>
-            <p>When a school administrator asked me if I planned to quit my job to compensate for services my son was legally entitled to, I knew the law well enough to push back. <strong>Most parents don&apos;t. That&apos;s not okay.</strong></p>
-            <p>Ada exists so that every parent — regardless of income, education, or zip code — can walk into that room knowing exactly what their child is owed.</p>
-          </div>
-        </div>
+  <span className={styles.sectionLabel}>Our Story</span>
+  <p>The first question I get asked — more than any other — is: <em>did you know?</em></p>
+  <p>No. I didn&apos;t know.</p>
+  <p>Robbie&apos;s diagnosis came when he was a week old. The doctor was in a rush. I was in the bathroom. He delivered the news quickly, through a closed door — I could hear the awkward sadness in his voice. He took the easy way out. It was a hit and run.</p>
+  <p>When I walked out of that bathroom and made my way down the hall to the nursery, something had shifted. The looks of congratulations and excitement that had greeted me all week were gone. In their place was pity. Averted eyes. Uncomfortable silence. They had all known. They had been avoiding me all morning, waiting for the doctor to deliver his news.</p>
+  <p>When I asked why no one had prepared me — so I could be truly present for that moment — I was told: <em>&ldquo;That&apos;s not my job. The doctor has to give you results.&rdquo;</em></p>
+  <p>They were right. It wasn&apos;t their job to give me the results. But it was absolutely their job to make sure I had support. That I wasn&apos;t alone. That resources were available to me the moment I needed them.</p>
+  <p>One nurse, with the best of intentions, said: <em>&ldquo;Why do bad things happen to good people?&rdquo;</em></p>
+  <p>I want to be clear about something: Robbie is not a bad thing. He never was.</p>
+  <p>I was sitting in the nursery holding him for the first time since the diagnosis — and I needed to say it out loud. The doctor and staff had left it for me to tell Robbie&apos;s dad. I needed to hear myself say the words. I called my father. I was crying hysterically.</p>
+  <p><em>&ldquo;Kimberly — what&apos;s wrong?&rdquo;</em></p>
+  <p><em>&ldquo;Robbie has Down syndrome.&rdquo;</em></p>
+  <p>There was a pause. Then a deep sigh. And then he said something I did not expect — something that snapped me out of my tailspin and brought me back to earth.</p>
+  <p><em>&ldquo;Oh — thank God. Kimberly, of all the things that doctor could have walked into that room and told you today, this is the best news you&apos;ve ever gotten. So what — he&apos;s still going to do all the things. He&apos;s premature, three pounds, struggling to breathe on his own. If you leave that hospital and the only thing he has is Down syndrome — you&apos;re winning.&rdquo;</em></p>
+  <p>And he was right.</p>
+  <p>That moment taught me everything I needed to know about the power of words. The right ones — at the right time — from someone who loves you — can completely change your future. They can pull you back from the edge of fear and plant you firmly in possibility.</p>
+  <p>That&apos;s the energy IEP Approved was built on.</p>
+  <p>Just because an outcome isn&apos;t what you expected does not mean it has to be hard, impossible, or negative. How we communicate with each other — the words we choose, the support we offer, the resources we make available — has the greatest impact on how we move forward. Community, knowledge, and access to the right resources can completely change your outlook. They can change your future.</p>
+  <p>My first IEP meeting was no different.</p>
+  <p>We lived in a rural area. Daycare options that could meet Robbie&apos;s needs were limited. When busing became a barrier — too far, the administrator said — she wanted to know if I was going to drive him myself.</p>
+  <p>I said no.</p>
+  <p>Access to a free and appropriate public education is Robbie&apos;s right under IDEA. His right to transportation is part of that. The school system needed to meet its obligation.</p>
+  <p>The administrator was frustrated. She told me — this mom, sitting across from her — that Robbie was going to have a lot of needs like this, and suggested I consider quitting my job to be more present. To transport him myself.</p>
+  <p>I asked her if she asked every parent that question.</p>
+  <p>Then I told her: No. I would continue to be a parent who works — who provides food, housing, and stability for her child. And the school system would need to meet its legal obligation.</p>
+  <p>I stayed calm. Not because it wasn&apos;t hard. But because I had knowledge. I knew the law. And knowing the law made me feel something I hadn&apos;t felt since that bathroom door swung open.</p>
+  <p><strong>Empowered.</strong></p>
+  <p>That&apos;s why IEP Approved exists.</p>
+  <p>Not to teach parents to fight — but to teach everyone at the table to partner. We built this for parents who want to walk in informed. For educators who want families to feel supported, not adversarial. For healthcare professionals who want their patients to have access to the resources and community they need to thrive.</p>
+  <p>When everyone speaks the same language — when the law is clear, the resources are accessible, and the support system is real — the outcome for the child is always better.</p>
+  <p>Because the moment you know your rights, everything changes. The conversation changes. The dynamic changes. You are no longer an outsider in your own child&apos;s education.</p>
+  <p>You belong at that table. You always did.</p>
+  <p><strong>We built IEP Approved so no parent ever has to navigate this alone.</strong></p>
+  <p><em>— Kimberly, Robbie&apos;s Mom and Founder of IEP Approved</em></p>
+</div>
       </section>
 
       {/* EMAIL CAPTURE */}
