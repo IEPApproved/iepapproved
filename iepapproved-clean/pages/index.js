@@ -215,7 +215,7 @@ export default function Home() {
         <div className={styles.originInner}>
           <div>
             <img
-              src="/kim-and-robbie.jpg"
+              src="/kim-and-robbie.jpeg"
               alt="Kimberly and Robbie"
               style={{width:'100%', maxWidth:'460px', borderRadius:'20px', border:'4px solid #D4A843', boxShadow:'0 20px 60px rgba(45,27,78,0.15)', display:'block', marginBottom:'32px'}}
             />
