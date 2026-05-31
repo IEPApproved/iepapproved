@@ -1,0 +1,32 @@
+:root {
+  --plum:        #2D1B4E;
+  --plum-deep:   #1E1035;
+  --plum-mid:    #3D2860;
+  --gold:        #D4A843;
+  --gold-light:  #ECC96A;
+  --gold-pale:   #FBF3DC;
+  --lavender:    #F3F0FA;
+  --lavender-mid:#E8E2F5;
+  --white:       #FFFFFF;
+  --ink:         #1A1026;
+  --muted:       #7A6E8E;
+  --text-on-plum:rgba(255,255,255,0.82);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--lavender);
+  color: var(--ink);
+  overflow-x: hidden;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
