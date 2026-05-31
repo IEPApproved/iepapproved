@@ -268,6 +268,7 @@ export default function Home() {
   <p><strong>We built IEP Approved so no parent ever has to navigate this alone.</strong></p>
   <p><em>— Kimberly, Robbie&apos;s Mom and Founder of IEP Approved</em></p>
 </div>
+        </div>
       </section>
 
       {/* EMAIL CAPTURE */}
