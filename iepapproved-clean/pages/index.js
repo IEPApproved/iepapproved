@@ -101,7 +101,7 @@ export default function Home() {
 
       {/* ORIGIN STRIP */}
       <div className={styles.originStrip}>
-        <p>&ldquo;A doctor once told me my son had Down syndrome — through a closed shower door. Every parent deserves better than that.&rdquo;</p>
+        <p>&ldquo;We don&apos;t teach parents to fight. We teach them to partner. The seat at the table is already yours — knowledge gives you the voice to use it.&rdquo;</p>
       </div>
 
       {/* HOW IT WORKS */}
