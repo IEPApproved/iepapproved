@@ -29,10 +29,12 @@ export default function Home() {
         </ul>
       </nav>
 
-      <section className={styles.hero}>
-        <div className={styles.heroInner}>
-          <div className={styles.heroLeft}>
-            <div className={styles.heroTagline}>Knowledge is power. Partnership is progress. Together — the IEP gets APPROVED.</div>
+      <div className={styles.heroTaglineBanner}>
+  Knowledge is power. Partnership is progress. Together — the IEP gets APPROVED.
+</div>
+<section className={styles.hero}>
+  <div className={styles.heroInner}>
+    <div className={styles.heroLeft}>
 <div className={styles.heroEyebrow}>✦ For special needs families</div>
             <h1 className={styles.heroHeadline}>
               Every parent deserves to know their child&apos;s <em>rights.</em>
