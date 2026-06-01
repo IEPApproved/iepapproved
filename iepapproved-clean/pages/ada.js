@@ -15,6 +15,7 @@ export default function AdaPage() {
   const bottomRef = useRef(null)
 
   useEffect(() => {
+  if (!router.isReady) return
   if (router.query.q) {
     const question = router.query.q
     setInput('')
@@ -39,7 +40,7 @@ export default function AdaPage() {
         setLoading(false)
       })
   }
-}, [])
+}, [router.isReady, router.query.q])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
