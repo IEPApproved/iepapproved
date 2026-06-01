@@ -23,7 +23,7 @@ export default function Home() {
         <ul className={styles.navLinks}>
           <li><a href="#how-it-works">How It Works</a></li>
           <li><a href="#ada">Ask Ada</a></li>
-          <li><a href="#pricing">Pricing</a></li>
+          <li><a href="#pricing">Find Your Support</a></li>
           <li><a href="#about">Our Story</a></li>
           <li><a href="/ada" className={styles.navCta}>Try Ada Free →</a></li>
         </ul>
@@ -32,7 +32,8 @@ export default function Home() {
       <section className={styles.hero}>
         <div className={styles.heroInner}>
           <div className={styles.heroLeft}>
-            <div className={styles.heroEyebrow}>✦ For special needs families</div>
+            <div className={styles.heroTagline}>Knowledge is power. Partnership is progress. Together — the IEP gets APPROVED.</div>
+<div className={styles.heroEyebrow}>✦ For special needs families</div>
             <h1 className={styles.heroHeadline}>
               Every parent deserves to know their child&apos;s <em>rights.</em>
             </h1>
@@ -91,7 +92,7 @@ export default function Home() {
             </div>
             <div className={styles.adaDisclaimer}>Not legal advice. Always consult an attorney for your specific situation.</div>
             <div style={{marginTop:'10px', padding:'8px 12px', background:'rgba(212,168,67,0.15)', border:'1px solid rgba(212,168,67,0.3)', borderRadius:'8px', fontSize:'11px', color:'#D4A843', textAlign:'center'}}>
-              🇪🇸 ¿Hablas español? Ada también — solo pregúntale en español.
+               ¿Hablas Español? Ada también — solo pregúntale En Español.
             </div>
           </div>
         </div>
@@ -135,7 +136,7 @@ export default function Home() {
                   { title: 'Cites the exact law', desc: 'Every answer references the specific federal statute — so you know exactly where the law stands.' },
                   { title: 'Just ask — Ada understands', desc: 'Type your question the way you\'d ask a trusted friend. Ada will find the answers and resources you need. No need to be formal — just ask.' },
                   { title: 'Honest about limits', desc: 'When you need a real attorney, Ada will tell you. No false confidence.' },
-                  { title: '¿Hablas español? Ada también.', desc: 'Puedes escribirle a Ada en español — ella te responderá en español con la información que necesitas.' },
+                  { title: '¿Hablas Español? Ada también.', desc: 'Puedes escribirle a Ada en Español — ella te responderá en Español con la información que necesitas.' },
                 ].map(f => (
                   <div key={f.title} className={styles.adaFeatureItem}>
                     <span className={styles.checkmark}>✓</span>
