@@ -13,6 +13,9 @@
 .navLinks a:hover { color:var(--gold); }
 .navCta { background:var(--gold); color:var(--plum-deep) !important; padding:8px 20px; border-radius:6px; font-weight:700 !important; }
 .navCta:hover { background:var(--gold-light) !important; }
+.heroTaglineBanner { background:var(--plum-mid); padding:10px 32px; text-align:center; font-family:'Cormorant Garamond',serif; font-size:clamp(14px,1.8vw,18px); font-style:italic; color:var(--gold); letter-spacing:0.5px; border-bottom:1px solid rgba(212,168,67,0.2); margin-top:64px; }
+
+/* HERO */
 
 /* HERO */
 .hero {
