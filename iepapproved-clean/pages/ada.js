@@ -15,10 +15,31 @@ export default function AdaPage() {
   const bottomRef = useRef(null)
 
   useEffect(() => {
-    if (router.query.q) {
-      setInput(router.query.q)
-    }
-  }, [router.query.q])
+  if (router.query.q) {
+    const question = router.query.q
+    setInput('')
+    const newMessages = [
+      { role: 'assistant', content: "Hi, I'm Ada — your IEP Approved AI guide to federal special education law. I can help you understand your child's rights under IDEA, ADA, and Section 504.\n\nWhat would you like to know?" },
+      { role: 'user', content: question }
+    ]
+    setMessages(newMessages)
+    setLoading(true)
+    fetch('/api/ada', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: newMessages })
+    })
+      .then(res => res.json())
+      .then(data => {
+        setMessages(prev => [...prev, { role: 'assistant', content: data.content }])
+        setLoading(false)
+      })
+      .catch(() => {
+        setMessages(prev => [...prev, { role: 'assistant', content: 'I encountered an error. Please try again.' }])
+        setLoading(false)
+      })
+  }
+}, [])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
