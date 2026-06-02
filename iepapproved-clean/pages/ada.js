@@ -80,7 +80,9 @@ export default function AdaPage() {
         <div style={s.header}>
           <a href="/" style={s.backLink}>← IEP Approved</a>
           <div style={s.headerCenter}>
-            <div style={s.headerAvatar}>A</div>
+            <div style={s.headerAvatar}>
+  <img src="/ada-avatar.png" alt="Ada" style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}} />
+</div>
             <div>
               <div style={s.headerName}>Ada</div>
               <div style={s.headerSub}>Federal IEP Law Guide</div>
@@ -106,7 +108,9 @@ export default function AdaPage() {
           ))}
           {loading && (
             <div style={s.msgRowAda}>
-              <div style={s.adaAvatar}>A</div>
+             <div style={s.adaAvatar}>
+  <img src="/ada-avatar.png" alt="Ada" style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}} />
+</div>
               <div style={s.bubbleAda}>
                 <span style={s.typingDot}></span>
                 <span style={{...s.typingDot, animationDelay:'0.2s'}}></span>
