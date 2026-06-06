@@ -4,12 +4,8 @@ export default async function handler(req, res) {
   const { text } = req.body
   if (!text) return res.status(400).json({ error: 'No text provided' })
 
-  // Debug: check if API key exists
   const apiKey = process.env.ELEVENLABS_API_KEY
-  if (!apiKey) {
-    console.error('ELEVENLABS_API_KEY is not set')
-    return res.status(500).json({ error: 'API key not configured' })
-  }
+  if (!apiKey) return res.status(500).json({ error: 'API key not configured' })
 
   const VOICE_ID = '9q9xpGHwmkXdA4JI72IU'
 
@@ -18,14 +14,10 @@ export default async function handler(req, res) {
     .replace(/\*(.*?)\*/g, '$1')
     .replace(/📖/g, '')
     .replace(/[•\-]{1,2}\s/g, '')
-    .replace(/#{1,3}\s/g, '')
     .trim()
     .substring(0, 2500)
 
   try {
-    console.log('Calling ElevenLabs with voice:', VOICE_ID)
-    console.log('API key starts with:', apiKey.substring(0, 8))
-
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`,
       {
@@ -48,15 +40,10 @@ export default async function handler(req, res) {
       }
     )
 
-    console.log('ElevenLabs response status:', response.status)
-
     if (!response.ok) {
       const errText = await response.text()
-      console.error('ElevenLabs error body:', errText)
-      return res.status(500).json({ 
-        error: `ElevenLabs error ${response.status}`,
-        details: errText.substring(0, 200)
-      })
+      console.error('ElevenLabs error:', response.status, errText)
+      return res.status(500).json({ error: `ElevenLabs ${response.status}`, details: errText.substring(0, 300) })
     }
 
     const buffer = await response.arrayBuffer()
@@ -65,7 +52,7 @@ export default async function handler(req, res) {
     res.send(Buffer.from(buffer))
 
   } catch (error) {
-    console.error('TTS fetch error:', error)
+    console.error('TTS error:', error)
     res.status(500).json({ error: error.message })
   }
 }
