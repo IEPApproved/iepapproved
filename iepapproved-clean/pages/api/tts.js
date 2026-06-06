@@ -4,25 +4,34 @@ export default async function handler(req, res) {
   const { text } = req.body
   if (!text) return res.status(400).json({ error: 'No text provided' })
 
-  const VOICE_ID = '9q9xpGHwmkXdA4JI72IU' // Kaylin — Warm, Expressive and Calm
+  // Debug: check if API key exists
+  const apiKey = process.env.ELEVENLABS_API_KEY
+  if (!apiKey) {
+    console.error('ELEVENLABS_API_KEY is not set')
+    return res.status(500).json({ error: 'API key not configured' })
+  }
 
-  // Clean text for speech
+  const VOICE_ID = '9q9xpGHwmkXdA4JI72IU'
+
   const clean = text
     .replace(/\*\*(.*?)\*\*/g, '$1')
     .replace(/\*(.*?)\*/g, '$1')
-    .replace(/📖/g, 'See law citation:')
+    .replace(/📖/g, '')
     .replace(/[•\-]{1,2}\s/g, '')
     .replace(/#{1,3}\s/g, '')
     .trim()
-    .substring(0, 2500) // Keep under credit limit
+    .substring(0, 2500)
 
   try {
+    console.log('Calling ElevenLabs with voice:', VOICE_ID)
+    console.log('API key starts with:', apiKey.substring(0, 8))
+
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}/stream`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`,
       {
         method: 'POST',
         headers: {
-          'xi-api-key': process.env.ELEVENLABS_API_KEY,
+          'xi-api-key': apiKey,
           'Content-Type': 'application/json',
           'Accept': 'audio/mpeg',
         },
@@ -39,21 +48,24 @@ export default async function handler(req, res) {
       }
     )
 
+    console.log('ElevenLabs response status:', response.status)
+
     if (!response.ok) {
-      const err = await response.text()
-      console.error('ElevenLabs error:', err)
-      return res.status(500).json({ error: 'TTS failed' })
+      const errText = await response.text()
+      console.error('ElevenLabs error body:', errText)
+      return res.status(500).json({ 
+        error: `ElevenLabs error ${response.status}`,
+        details: errText.substring(0, 200)
+      })
     }
 
-    // Stream audio back to client
+    const buffer = await response.arrayBuffer()
     res.setHeader('Content-Type', 'audio/mpeg')
     res.setHeader('Cache-Control', 'no-cache')
-
-    const buffer = await response.arrayBuffer()
     res.send(Buffer.from(buffer))
 
   } catch (error) {
-    console.error('TTS error:', error)
-    res.status(500).json({ error: 'TTS service error' })
+    console.error('TTS fetch error:', error)
+    res.status(500).json({ error: error.message })
   }
 }
