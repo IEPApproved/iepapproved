@@ -34,20 +34,20 @@ export default function AdaPage() {
   const [wallDone, setWallDone] = useState(false)
   const [isListening, setIsListening] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
-  const [autoSpeak, setAutoSpeak] = useState(true) // ON by default
+  const [autoSpeak, setAutoSpeak] = useState(true)
   const [speechSupported, setSpeechSupported] = useState(false)
   const [lastAdaText, setLastAdaText] = useState("Hi, I'm Ada — your IEP Approved AI guide to federal special education law. I can help you understand your child's rights under IDEA, ADA, and Section 504. What would you like to know?")
   const [audioError, setAudioError] = useState(null)
+  const [mounted, setMounted] = useState(false)
   const bottomRef = useRef(null)
   const recognitionRef = useRef(null)
   const audioRef = useRef(null)
 
   useEffect(() => {
+    setMounted(true)
     const u = getStorageCount()
     setUsage(u)
-    if (typeof window !== 'undefined') {
-      setSpeechSupported('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)
-    }
+    setSpeechSupported('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)
   }, [])
 
   useEffect(() => {
@@ -224,7 +224,7 @@ export default function AdaPage() {
         <div style={s.nav}>
           <a href="/" style={s.backLink}>← IEP Approved</a>
           <div style={s.navRight}>
-            <span style={s.counterPill}>{questionsLeft} {usage.isGuest ? 'free questions' : 'remaining this month'}</span>
+            {mounted && <span style={s.counterPill}>{questionsLeft} {usage.isGuest ? 'free questions' : 'remaining this month'}</span>}
           </div>
         </div>
 
