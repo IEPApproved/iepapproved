@@ -1,15 +1,17 @@
 import Head from 'next/head'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 
 const ADA_UNLIMITED_PRICE_ID = 'price_1TfOauPsMEtDZUDk1o4Vcy1c'
 
 export default function Signup() {
   const router = useRouter()
-  const { plan } = router.query
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => { setMounted(true) }, [])
 
   const handleCheckout = async () => {
     if (!email || !email.includes('@')) {
@@ -37,6 +39,8 @@ export default function Signup() {
     }
   }
 
+  if (!mounted) return null
+
   return (
     <>
       <Head>
@@ -51,21 +55,19 @@ export default function Signup() {
         </nav>
 
         <div style={s.container}>
-
-          {/* LEFT — what you get */}
+          {/* LEFT */}
           <div style={s.left}>
             <div style={s.badge}>Ada Unlimited</div>
             <h1 style={s.headline}>Unlimited access to Ada.<br/>For <span style={{color:'#D4A843'}}>$4.99/month.</span></h1>
-            <p style={s.sub}>Ask Ada as many questions as you need — any time, day or night. Federal and state special education law, explained in plain language.</p>
+            <p style={s.sub}>Ask Ada as many questions as you need — any time, day or night. Federal special education law, explained in plain language.</p>
 
             <div style={s.features}>
               {[
-                ['♾️', 'Unlimited questions to Ada', 'No monthly limits — ever'],
+                ['♾️', 'Unlimited questions to Ada', 'No monthly limits'],
                 ['⚖️', 'Federal law coverage', 'IDEA, ADA, and Section 504'],
-                ['🗺️', 'State-specific guidance', 'Your state\'s laws and timelines'],
-                ['🔊', 'Ada reads answers aloud', 'Warm, human voice — Kaylin'],
-                ['🎤', 'Speak your questions', 'Voice input supported'],
-                ['🌎', 'English and Spanish', 'Ada habla español también'],
+                ['🔊', 'Ada Responds', 'Ada provides both text and voice response'],
+                ['🎤', 'Ask Ada — Voice Recognition', 'Ask Ada by typing or using the mic, hands free'],
+                ['🌎', 'English and Spanish', 'Ada responds in the language you ask — English or Español'],
               ].map(([icon, title, desc], i) => (
                 <div key={i} style={s.feature}>
                   <span style={s.featureIcon}>{icon}</span>
@@ -86,7 +88,7 @@ export default function Signup() {
             </div>
           </div>
 
-          {/* RIGHT — checkout form */}
+          {/* RIGHT */}
           <div style={s.right}>
             <div style={s.card}>
               <div style={s.adaWrap}>
@@ -126,7 +128,6 @@ export default function Signup() {
               <p style={s.legal}>By subscribing you agree to our <a href="/terms" style={s.link}>Terms of Service</a> and <a href="/privacy" style={s.link}>Privacy Policy</a>.</p>
             </div>
 
-            {/* Coming soon tiers */}
             <div style={s.comingSoon}>
               <div style={s.comingSoonTitle}>More plans coming soon</div>
               <div style={s.comingSoonTiers}>
@@ -151,10 +152,7 @@ export default function Signup() {
       <style>{`
         * { box-sizing:border-box; margin:0; padding:0; }
         body { font-family:'Outfit',sans-serif; background:#F3F0FA; }
-        input:focus { outline:none; border-color:#2D1B4E !important; box-shadow: 0 0 0 3px rgba(45,27,78,0.1); }
-        @media(max-width:768px) {
-          .signup-container { flex-direction:column !important; }
-        }
+        input:focus { outline:none; border-color:#2D1B4E !important; }
       `}</style>
     </>
   )
@@ -165,8 +163,6 @@ const s = {
   nav: { background:'#2D1B4E', padding:'0 32px', height:'64px', display:'flex', alignItems:'center' },
   navLogo: { fontFamily:"'Cormorant Garamond',serif", fontSize:'22px', fontWeight:700, color:'#fff', textDecoration:'none' },
   container: { maxWidth:'1100px', margin:'0 auto', padding:'48px 24px', display:'flex', gap:'48px', alignItems:'flex-start', flexWrap:'wrap' },
-
-  // LEFT
   left: { flex:1, minWidth:'300px' },
   badge: { display:'inline-block', background:'#D4A843', color:'#1E1035', fontSize:'11px', fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase', padding:'5px 14px', borderRadius:'100px', marginBottom:'20px' },
   headline: { fontFamily:"'Cormorant Garamond',serif", fontSize:'clamp(28px,4vw,42px)', fontWeight:700, color:'#2D1B4E', lineHeight:1.2, marginBottom:'16px' },
@@ -177,8 +173,6 @@ const s = {
   featureTitle: { fontSize:'14px', fontWeight:700, color:'#2D1B4E', marginBottom:'2px' },
   featureDesc: { fontSize:'13px', color:'#7A6E8E' },
   guarantee: { display:'flex', alignItems:'center', gap:'12px', background:'#fff', border:'1px solid #E8E2F5', borderRadius:'12px', padding:'16px 20px' },
-
-  // RIGHT
   right: { width:'380px', flexShrink:0 },
   card: { background:'#fff', borderRadius:'20px', padding:'32px', boxShadow:'0 4px 24px rgba(45,27,78,0.12)', marginBottom:'20px' },
   adaWrap: { width:'72px', height:'72px', borderRadius:'50%', overflow:'hidden', margin:'0 auto 16px', border:'3px solid #D4A843' },
@@ -187,17 +181,15 @@ const s = {
   cardSub: { fontSize:'13px', color:'#7A6E8E', textAlign:'center', marginBottom:'24px' },
   formGroup: { marginBottom:'16px' },
   label: { display:'block', fontSize:'13px', fontWeight:600, color:'#2D1B4E', marginBottom:'6px' },
-  input: { width:'100%', padding:'12px 14px', border:'1.5px solid #E8E2F5', borderRadius:'10px', fontSize:'14px', fontFamily:'Outfit,sans-serif', color:'#1A1026', background:'#F9F8FC', transition:'border-color 0.2s' },
+  input: { width:'100%', padding:'12px 14px', border:'1.5px solid #E8E2F5', borderRadius:'10px', fontSize:'14px', fontFamily:'Outfit,sans-serif', color:'#1A1026', background:'#F9F8FC' },
   error: { background:'#FEF2F2', border:'1px solid #FECACA', borderRadius:'8px', padding:'10px 14px', fontSize:'13px', color:'#DC2626', marginBottom:'14px' },
-  btn: { width:'100%', background:'#2D1B4E', color:'#fff', border:'none', borderRadius:'12px', padding:'15px', fontSize:'15px', fontWeight:700, cursor:'pointer', fontFamily:'Outfit,sans-serif', transition:'background 0.2s', marginBottom:'16px' },
+  btn: { width:'100%', background:'#2D1B4E', color:'#fff', border:'none', borderRadius:'12px', padding:'15px', fontSize:'15px', fontWeight:700, cursor:'pointer', fontFamily:'Outfit,sans-serif', marginBottom:'16px' },
   price: { textAlign:'center', marginBottom:'8px' },
   priceAmount: { fontSize:'28px', fontWeight:700, color:'#2D1B4E' },
   pricePer: { fontSize:'14px', color:'#7A6E8E', marginLeft:'4px' },
   secure: { textAlign:'center', fontSize:'12px', color:'#7A6E8E', marginBottom:'12px' },
   legal: { textAlign:'center', fontSize:'11px', color:'#9CA3AF', lineHeight:1.5 },
   link: { color:'#2D1B4E', textDecoration:'underline' },
-
-  // COMING SOON
   comingSoon: { background:'rgba(45,27,78,0.05)', border:'1px solid rgba(45,27,78,0.1)', borderRadius:'16px', padding:'20px' },
   comingSoonTitle: { fontSize:'11px', fontWeight:700, color:'#7A6E8E', letterSpacing:'1px', textTransform:'uppercase', marginBottom:'14px', textAlign:'center' },
   comingSoonTiers: { display:'flex', gap:'12px' },
