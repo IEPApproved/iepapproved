@@ -19,23 +19,23 @@ export default function Home() {
       </Head>
 
       <nav className={styles.nav}>
-        <a href="#" className={styles.navLogo}>IEP <span>Approved</span></a>
+        <a href="/" className={styles.navLogo}>
+          <img src="/IEP_Approved_FINAL_logo.png" alt="IEP Approved" style={{height:'42px', width:'auto'}} />
+        </a>
         <ul className={styles.navLinks}>
           <li><a href="#how-it-works">How It Works</a></li>
           <li><a href="#ada">Ask Ada</a></li>
           <li><a href="#pricing">Find Your Support</a></li>
           <li><a href="#about">Our Story</a></li>
+          <li><a href="/contact">Contact Us</a></li>
           <li><a href="/ada" className={styles.navCta}>Try Ada Free →</a></li>
         </ul>
       </nav>
 
-      <div className={styles.heroTaglineBanner}>
-  Knowledge is power. Partnership is progress. Together — the IEP gets APPROVED.
-</div>
-<section className={styles.hero}>
-  <div className={styles.heroInner}>
-    <div className={styles.heroLeft}>
-<div className={styles.heroEyebrow}>✦ For special needs families</div>
+      <section className={styles.hero}>
+        <div className={styles.heroInner}>
+          <div className={styles.heroLeft}>
+            <div className={styles.heroEyebrow}>✦ For special needs families</div>
             <h1 className={styles.heroHeadline}>
               Every parent deserves to know their child&apos;s <em>rights.</em>
             </h1>
@@ -94,7 +94,7 @@ export default function Home() {
             </div>
             <div className={styles.adaDisclaimer}>Not legal advice. Always consult an attorney for your specific situation.</div>
             <div style={{marginTop:'10px', padding:'8px 12px', background:'rgba(212,168,67,0.15)', border:'1px solid rgba(212,168,67,0.3)', borderRadius:'8px', fontSize:'11px', color:'#D4A843', textAlign:'center'}}>
-               ¿Hablas Español? Ada también — solo pregúntale En Español.
+              🇪🇸 ¿Hablas español? Ada también — solo pregúntale en español.
             </div>
           </div>
         </div>
@@ -138,7 +138,7 @@ export default function Home() {
                   { title: 'Cites the exact law', desc: 'Every answer references the specific federal statute — so you know exactly where the law stands.' },
                   { title: 'Just ask — Ada understands', desc: 'Type your question the way you\'d ask a trusted friend. Ada will find the answers and resources you need. No need to be formal — just ask.' },
                   { title: 'Honest about limits', desc: 'When you need a real attorney, Ada will tell you. No false confidence.' },
-                  { title: '¿Hablas Español? Ada también.', desc: 'Puedes escribirle a Ada en Español — ella te responderá en Español con la información que necesitas.' },
+                  { title: '¿Hablas español? Ada también.', desc: 'Puedes escribirle a Ada en español — ella te responderá en español con la información que necesitas.' },
                 ].map(f => (
                   <div key={f.title} className={styles.adaFeatureItem}>
                     <span className={styles.checkmark}>✓</span>
@@ -218,7 +218,7 @@ export default function Home() {
         <div className={styles.originInner}>
           <div>
             <img
-              src="/kim-and-robbie.jpeg"
+              src="/kim-and-robbie.jpg"
               alt="Kimberly and Robbie"
               style={{width:'100%', maxWidth:'460px', borderRadius:'20px', border:'4px solid #D4A843', boxShadow:'0 20px 60px rgba(45,27,78,0.15)', display:'block', marginBottom:'32px'}}
             />
@@ -287,15 +287,15 @@ export default function Home() {
           </div>
           <div>
             <div className={styles.footerColTitle}>Platform</div>
-            <ul className={styles.footerLinks}><li><a href="/ada">Ask Ada</a></li><li><a href="#pricing">Pricing</a></li></ul>
+            <ul className={styles.footerLinks}><li><a href="/ada">Ask Ada</a></li><li><a href="#pricing">Find Your Support</a></li><li><a href="/signup">Ada Unlimited</a></li></ul>
           </div>
           <div>
             <div className={styles.footerColTitle}>Company</div>
-            <ul className={styles.footerLinks}><li><a href="#about">Our Story</a></li><li><a href="mailto:hello@iepapproved.com">Contact</a></li></ul>
+            <ul className={styles.footerLinks}><li><a href="#about">Our Story</a></li><li><a href="/contact">Contact Us</a></li><li><a href="/contact">info@iepapproved.com</a></li></ul>
           </div>
           <div>
             <div className={styles.footerColTitle}>Legal</div>
-            <ul className={styles.footerLinks}><li><a href="/terms">Terms</a></li><li><a href="/privacy">Privacy</a></li><li><a href="/disclaimer">Disclaimer</a></li></ul>
+            <ul className={styles.footerLinks}><li><a href="/terms">Terms</a></li><li><a href="/privacy">Privacy</a></li><li><a href="/disclaimer">Disclaimer</a></li><li><a href="/contact">Contact</a></li></ul>
           </div>
         </div>
         <div className={styles.footerBottom}>
