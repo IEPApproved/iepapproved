@@ -1,6 +1,4 @@
 // pages/_app.js
-// Wrap entire site in LanguageProvider for EN | ES toggle
-
 import '../styles/globals.css';
 import { LanguageProvider } from '../context/LanguageContext';
 
