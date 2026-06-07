@@ -362,7 +362,7 @@ export default function AdaPage() {
       <nav style={s.nav}>
         <div style={s.navInner}>
           <Link href="/" style={s.logoLink}>
-            <img src="/images/logo.png" alt="IEP Approved" style={s.logo}
+            <img src="/logo.png" alt="IEP Approved" style={s.logo}
               onError={(e) => { e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }} />
             <div style={{...s.logoFallback, display:'none'}}>
               <span style={s.logoIEP}>IEP</span>
@@ -414,7 +414,7 @@ export default function AdaPage() {
           <div style={s.mobileAdaInfo}>
             {/* Avatar */}
             <div style={{...s.mobileAvatar, boxShadow: isSpeaking ? '0 0 0 3px #D4A843' : 'none'}}>
-              <img src="/images/ada-avatar.png" alt="Ada" style={s.mobileAvatarImg}
+              <img src="/ada-avatar.png" alt="Ada" style={s.mobileAvatarImg}
                 onError={(e) => { e.target.style.display='none'; }} />
               <span style={s.mobileAvatarInit}>A</span>
             </div>
@@ -448,7 +448,7 @@ export default function AdaPage() {
         {!isMobile && (
           <div style={s.leftPanel}>
             <div style={{...s.adaRing, boxShadow: isSpeaking?'0 0 0 8px rgba(212,168,67,0.4)':'none'}}>
-              <img src="/images/ada-avatar.png" alt="Ada" style={s.adaAvatar}
+              <img src="/ada-avatar.png" alt="Ada" style={s.adaAvatar}
                 onError={(e) => { e.target.style.display='none'; }} />
               <div style={s.adaInitials}>ADA</div>
             </div>
