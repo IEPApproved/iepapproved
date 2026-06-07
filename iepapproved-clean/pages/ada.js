@@ -635,7 +635,7 @@ const s = {
   leftPanel:{width:'250px',minWidth:'250px',backgroundColor:'#1a0f2e',borderRight:'1px solid rgba(212,168,67,0.2)',display:'flex',flexDirection:'column',alignItems:'center',padding:'24px 14px 20px',gap:'10px'},
   adaRing:{width:'90px',height:'90px',borderRadius:'50%',border:'3px solid #D4A843',display:'flex',alignItems:'center',justifyContent:'center',position:'relative',overflow:'hidden',backgroundColor:'#2D1B4E',marginBottom:'4px',transition:'box-shadow 0.3s'},
   adaAvatar:{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%',position:'absolute',zIndex:2},
-  adaInitials:{color:'#D4A843',fontSize:'20px',fontWeight:'800',fontFamily:'Cormorant Garamond,serif',letterSpacing:'2px',zIndex:1},
+  adaInitials:{color:'#D4A843',fontSize:'20px',fontWeight:'800',fontFamily:'Cormorant Garamond,serif',letterSpacing:'2px',zIndex:1,display:'none'},
   adaName:{color:'#D4A843',fontSize:'20px',fontFamily:'Cormorant Garamond,serif',fontWeight:'700',margin:0},
   adaSubtitle:{color:'#b8a8d0',fontSize:'11px',textAlign:'center',margin:0,lineHeight:'1.4'},
   statusBadge:{display:'flex',alignItems:'center',gap:'6px',backgroundColor:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:'20px',padding:'5px 12px',fontSize:'12px',color:'#e8e0f0'},
