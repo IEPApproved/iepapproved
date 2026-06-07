@@ -1,6 +1,6 @@
-// pages/ada.js
-// IEP Approved — Ada AI Chat Page
-// Fixes: volume control, pause/resume, scrub, thinking bubbles, stop audio on new question
+// pages/ada.js — IEP Approved
+// Mobile-first responsive: slim top bar on phone, left panel on desktop
+// Fixes: auto-play greeting, play/pause icons, audio stops on unmount, "Searching..." bubbles
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Head from 'next/head';
@@ -54,6 +54,8 @@ export default function AdaPage() {
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [limitEmail, setLimitEmail] = useState('');
   const [limitEmailSent, setLimitEmailSent] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const audioRef = useRef(null);
   const audioBlobUrlRef = useRef(null);
@@ -62,6 +64,15 @@ export default function AdaPage() {
   const recognitionRef = useRef(null);
   const inputRef = useRef(null);
   const chatBottomRef = useRef(null);
+  const greetingPlayedRef = useRef(false);
+
+  // Detect mobile
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   useEffect(() => {
     setMounted(true);
@@ -72,15 +83,6 @@ export default function AdaPage() {
   }, []);
 
   useEffect(() => {
-    if (mounted) {
-      const greeting = lang === 'es'
-        ? '¡Hola! Soy Ada, tu guía de leyes del IEP. Pregúntame cualquier cosa sobre los derechos de tu hijo bajo IDEA, la Sección 504 o la ADA.'
-        : "Hello! I'm Ada, your IEP law guide. Ask me anything about your child's rights under IDEA, Section 504, or ADA — in English or Spanish.";
-      setMessages([{ role: 'assistant', content: greeting }]);
-    }
-  }, [lang, mounted]);
-
-  useEffect(() => {
     chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isThinking]);
 
@@ -88,6 +90,7 @@ export default function AdaPage() {
     if (audioRef.current) audioRef.current.volume = volume;
   }, [volume]);
 
+  // STOP AUDIO — also called on unmount to prevent background playback
   const stopAudio = useCallback(() => {
     if (audioRef.current) {
       audioRef.current.pause();
@@ -105,31 +108,15 @@ export default function AdaPage() {
     setAudioDuration(0);
   }, []);
 
-  const togglePause = () => {
-    if (!audioRef.current) return;
-    if (isPaused) {
-      audioRef.current.play();
-      setIsPaused(false);
-      progressIntervalRef.current = setInterval(() => {
-        if (audioRef.current) {
-          const pct = (audioRef.current.currentTime / audioRef.current.duration) * 100;
-          setAudioProgress(isNaN(pct) ? 0 : pct);
-        }
-      }, 200);
-    } else {
-      audioRef.current.pause();
-      setIsPaused(true);
-      clearInterval(progressIntervalRef.current);
-    }
-  };
+  // STOP AUDIO WHEN NAVIGATING AWAY
+  useEffect(() => {
+    return () => {
+      stopAudio();
+      if (recognitionRef.current) recognitionRef.current.abort();
+    };
+  }, [stopAudio]);
 
-  const handleScrub = (e) => {
-    if (!audioRef.current || !audioDuration) return;
-    const pct = parseFloat(e.target.value);
-    audioRef.current.currentTime = (pct / 100) * audioDuration;
-    setAudioProgress(pct);
-  };
-
+  // SPEAK TEXT
   const speakText = useCallback(async (text, speakLang) => {
     stopAudio();
     lastSpokenTextRef.current = text;
@@ -172,6 +159,45 @@ export default function AdaPage() {
       setIsSpeaking(false);
     }
   }, [lang, volume, stopAudio]);
+
+  // SET GREETING + AUTO-PLAY on mount and lang change
+  useEffect(() => {
+    if (!mounted) return;
+    const greeting = lang === 'es'
+      ? '¡Hola! Soy Ada, tu guía de leyes del IEP. Pregúntame cualquier cosa sobre los derechos de tu hijo bajo IDEA, la Sección 504 o la ADA.'
+      : "Hello! I'm Ada, your IEP Approved AI Guide. Ask me anything about your child's rights under IDEA, Section 504, or ADA — in English or Spanish.";
+    setMessages([{ role: 'assistant', content: greeting }]);
+    // Auto-play greeting on first load only
+    if (!greetingPlayedRef.current && autoRead) {
+      greetingPlayedRef.current = true;
+      setTimeout(() => speakText(greeting, lang), 800);
+    }
+  }, [lang, mounted]);
+
+  const togglePause = () => {
+    if (!audioRef.current) return;
+    if (isPaused) {
+      audioRef.current.play();
+      setIsPaused(false);
+      progressIntervalRef.current = setInterval(() => {
+        if (audioRef.current) {
+          const pct = (audioRef.current.currentTime / audioRef.current.duration) * 100;
+          setAudioProgress(isNaN(pct) ? 0 : pct);
+        }
+      }, 200);
+    } else {
+      audioRef.current.pause();
+      setIsPaused(true);
+      clearInterval(progressIntervalRef.current);
+    }
+  };
+
+  const handleScrub = (e) => {
+    if (!audioRef.current || !audioDuration) return;
+    const pct = parseFloat(e.target.value);
+    audioRef.current.currentTime = (pct / 100) * audioDuration;
+    setAudioProgress(pct);
+  };
 
   const startListening = (micLang) => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
@@ -255,10 +281,6 @@ export default function AdaPage() {
     }
   };
 
-  const repeatLastResponse = () => {
-    if (lastSpokenTextRef.current) speakText(lastSpokenTextRef.current, lang);
-  };
-
   const handleLimitSignup = async (e) => {
     e.preventDefault();
     if (!limitEmail) return;
@@ -287,115 +309,184 @@ export default function AdaPage() {
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
+  // ── PLAY/PAUSE BUTTON (unified) ────────────────────────────────────────────
+  const PlayPauseBtn = ({ style }) => {
+    if (isSpeaking) {
+      return (
+        <button onClick={togglePause} style={style || s.audioBtn}>
+          {isPaused ? '▶ Play' : '⏸ Pause'}
+        </button>
+      );
+    }
+    return (
+      <button onClick={() => lastSpokenTextRef.current && speakText(lastSpokenTextRef.current, lang)}
+        style={style || s.audioBtn} disabled={!lastSpokenTextRef.current}>
+        ▶ Play
+      </button>
+    );
+  };
+
+  // ── SETTINGS PANEL (shared desktop + mobile) ───────────────────────────────
+  const SettingsPanel = () => (
+    <div style={s.settingsPanel}>
+      <div style={s.volumeRow}>
+        <span>🔉</span>
+        <input type="range" min="0" max="1" step="0.05" value={volume}
+          onChange={e => setVolume(parseFloat(e.target.value))} style={s.slider} />
+        <span>🔊</span>
+      </div>
+      {isSpeaking && (
+        <div style={s.progressRow}>
+          <span style={s.timeText}>{formatTime(audioRef.current?.currentTime)}</span>
+          <input type="range" min="0" max="100" value={audioProgress}
+            onChange={handleScrub} style={s.slider} />
+          <span style={s.timeText}>{formatTime(audioDuration)}</span>
+        </div>
+      )}
+      <label style={s.autoLabel}>
+        <input type="checkbox" checked={autoRead} onChange={e => setAutoRead(e.target.checked)} style={{marginRight:'6px'}} />
+        {lang === 'es' ? 'Leer automáticamente' : 'Auto-Read'}
+      </label>
+    </div>
+  );
+
   return (
     <>
       <Head>
         <title>Ask Ada — IEP Approved</title>
         <meta name="description" content="Ask Ada your IEP law questions — free, bilingual, powered by AI." />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
       </Head>
 
-      <nav style={styles.nav}>
-        <div style={styles.navInner}>
-          <Link href="/" style={styles.logoLink}>
-            <img src="/images/logo.png" alt="IEP Approved" style={styles.logo}
+      {/* ── TOP NAV ── */}
+      <nav style={s.nav}>
+        <div style={s.navInner}>
+          <Link href="/" style={s.logoLink}>
+            <img src="/images/logo.png" alt="IEP Approved" style={s.logo}
               onError={(e) => { e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }} />
-            <div style={{...styles.logoFallback, display:'none'}}>
-              <span style={styles.logoIEP}>IEP</span>
-              <span style={styles.logoApproved}>APPROVED</span>
+            <div style={{...s.logoFallback, display:'none'}}>
+              <span style={s.logoIEP}>IEP</span>
+              <span style={s.logoApp}>APPROVED</span>
             </div>
           </Link>
-          <div style={styles.navLinks}>
-            <Link href="/#how-it-works" style={styles.navLink}>How It Works</Link>
-            <Link href="/storefront" style={styles.navLink}>Storefront</Link>
-            <Link href="/community" style={styles.navLink}>Community</Link>
-            <Link href="/contact" style={styles.navLink}>Contact</Link>
-            {userTier !== 'unlimited' && (
-              <span style={styles.qBadge}>{questionsLeft} {lang === 'es' ? 'preguntas' : 'left'}</span>
-            )}
-            <button onClick={toggleLang} style={styles.langToggle}>
-              <span style={lang==='en' ? styles.langOn : styles.langOff}>EN</span>
-              <span style={styles.langDiv}>|</span>
-              <span style={lang==='es' ? styles.langOn : styles.langOff}>ES</span>
-            </button>
-            {userTier !== 'unlimited' && (
-              <Link href="/signup" style={styles.upgradeBtn}>⭐ Ada Unlimited</Link>
-            )}
-          </div>
+          {/* Desktop nav links — hidden on mobile */}
+          {!isMobile && (
+            <div style={s.navLinks}>
+              <Link href="/#how-it-works" style={s.navLink}>How It Works</Link>
+              <Link href="/storefront" style={s.navLink}>Storefront</Link>
+              <Link href="/community" style={s.navLink}>Community</Link>
+              <Link href="/contact" style={s.navLink}>Contact</Link>
+              {userTier !== 'unlimited' && (
+                <span style={s.qBadge}>{questionsLeft} {lang==='es'?'preguntas':'left'}</span>
+              )}
+              <button onClick={toggleLang} style={s.langToggle}>
+                <span style={lang==='en'?s.langOn:s.langOff}>EN</span>
+                <span style={s.langDiv}>|</span>
+                <span style={lang==='es'?s.langOn:s.langOff}>ES</span>
+              </button>
+              {userTier !== 'unlimited' && (
+                <Link href="/signup" style={s.upgradeBtn}>⭐ Ada Unlimited</Link>
+              )}
+            </div>
+          )}
+          {/* Mobile nav — compact */}
+          {isMobile && (
+            <div style={s.mobileNavRight}>
+              {userTier !== 'unlimited' && (
+                <span style={s.qBadgeSm}>{questionsLeft}</span>
+              )}
+              <button onClick={toggleLang} style={s.langToggleSm}>
+                <span style={lang==='en'?s.langOn:s.langOff}>EN</span>
+                <span style={s.langDiv}>|</span>
+                <span style={lang==='es'?s.langOn:s.langOff}>ES</span>
+              </button>
+              {userTier !== 'unlimited' && (
+                <Link href="/signup" style={s.upgradeBtnSm}>⭐</Link>
+              )}
+            </div>
+          )}
         </div>
       </nav>
 
-      <div style={styles.page}>
-        <div style={styles.leftPanel}>
-          <div style={{...styles.adaRing, boxShadow: isSpeaking ? '0 0 0 8px rgba(212,168,67,0.4)' : 'none', transition:'box-shadow 0.3s'}}>
-            <img src="/images/ada-avatar.png" alt="Ada" style={styles.adaAvatar}
-              onError={(e) => { e.target.style.display='none'; }} />
-            <div style={styles.adaInitials}>ADA</div>
-          </div>
-          <h2 style={styles.adaName}>Ada</h2>
-          <p style={styles.adaSubtitle}>Your IEP Approved AI Guide</p>
-          <div style={styles.statusBadge}>
-            <span style={{...styles.statusDot, backgroundColor: isThinking ? '#f59e0b' : isSpeaking ? '#D4A843' : '#22c55e'}} />
-            {isThinking ? (lang==='es'?'Pensando...':'Thinking...') : isSpeaking ? (lang==='es'?'Hablando...':'Speaking...') : (lang==='es'?'En línea':'Online')}
-          </div>
-
-          <div style={styles.audioControls}>
-            <div style={styles.audioRow}>
-              {isSpeaking ? (
-                <button onClick={togglePause} style={styles.audioBtn}>
-                  {isPaused ? '▶ Resume' : '⏸ Pause'}
-                </button>
-              ) : (
-                <button onClick={repeatLastResponse} style={styles.audioBtn} disabled={!lastSpokenTextRef.current}>
-                  ▶ Repeat
-                </button>
-              )}
-              {isSpeaking && (
-                <button onClick={stopAudio} style={styles.stopBtn}>⏹ Stop</button>
-              )}
+      {/* ── MOBILE TOP BAR (Ada status + controls) ── */}
+      {isMobile && (
+        <div style={s.mobileTopBar}>
+          <div style={s.mobileAdaInfo}>
+            {/* Avatar */}
+            <div style={{...s.mobileAvatar, boxShadow: isSpeaking ? '0 0 0 3px #D4A843' : 'none'}}>
+              <img src="/images/ada-avatar.png" alt="Ada" style={s.mobileAvatarImg}
+                onError={(e) => { e.target.style.display='none'; }} />
+              <span style={s.mobileAvatarInit}>A</span>
             </div>
-
-            {isSpeaking && (
-              <div style={styles.progressWrap}>
-                <span style={styles.progressTime}>{formatTime(audioRef.current?.currentTime)}</span>
-                <input type="range" min="0" max="100" value={audioProgress}
-                  onChange={handleScrub} style={styles.progressBar} />
-                <span style={styles.progressTime}>{formatTime(audioDuration)}</span>
+            <div>
+              <div style={s.mobileAdaName}>Ada</div>
+              <div style={s.mobileStatus}>
+                <span style={{...s.statusDot, backgroundColor: isThinking?'#f59e0b':isSpeaking?'#D4A843':'#22c55e'}} />
+                <span style={s.statusText}>
+                  {isThinking?(lang==='es'?'Pensando...':'Thinking...'):isSpeaking?(lang==='es'?'Hablando...':'Speaking...'):(lang==='es'?'En línea':'Online')}
+                </span>
               </div>
-            )}
-
-            <div style={styles.volumeRow}>
-              <span style={styles.volIcon}>🔉</span>
-              <input type="range" min="0" max="1" step="0.05" value={volume}
-                onChange={e => setVolume(parseFloat(e.target.value))} style={styles.volumeSlider} />
-              <span style={styles.volIcon}>🔊</span>
             </div>
-
-            <label style={styles.autoReadLabel}>
-              <input type="checkbox" checked={autoRead} onChange={e => setAutoRead(e.target.checked)} style={{marginRight:'6px'}} />
-              {lang === 'es' ? 'Leer auto' : 'Auto-Read'}
-            </label>
           </div>
-
-          <p style={styles.disclaimer}>Ada is not an attorney. IEP Approved provides legal information only.</p>
+          {/* Mobile audio controls */}
+          <div style={s.mobileAudioRow}>
+            <PlayPauseBtn style={s.mobileAudioBtn} />
+            {isSpeaking && (
+              <button onClick={stopAudio} style={s.mobileStopBtn}>⏹</button>
+            )}
+            <button onClick={() => setShowSettings(!showSettings)} style={s.settingsBtn}>⚙️</button>
+          </div>
+          {/* Settings dropdown */}
+          {showSettings && <SettingsPanel />}
         </div>
+      )}
 
-        <div style={styles.rightPanel}>
-          <div style={styles.chatArea}>
+      {/* ── MAIN LAYOUT ── */}
+      <div style={isMobile ? s.pageMobile : s.pageDesktop}>
+
+        {/* DESKTOP LEFT PANEL */}
+        {!isMobile && (
+          <div style={s.leftPanel}>
+            <div style={{...s.adaRing, boxShadow: isSpeaking?'0 0 0 8px rgba(212,168,67,0.4)':'none'}}>
+              <img src="/images/ada-avatar.png" alt="Ada" style={s.adaAvatar}
+                onError={(e) => { e.target.style.display='none'; }} />
+              <div style={s.adaInitials}>ADA</div>
+            </div>
+            <h2 style={s.adaName}>Ada</h2>
+            <p style={s.adaSubtitle}>Your IEP Approved AI Guide</p>
+            <div style={s.statusBadge}>
+              <span style={{...s.statusDot, backgroundColor: isThinking?'#f59e0b':isSpeaking?'#D4A843':'#22c55e'}} />
+              {isThinking?(lang==='es'?'Pensando...':'Thinking...'):isSpeaking?(lang==='es'?'Hablando...':'Speaking...'):(lang==='es'?'En línea':'Online')}
+            </div>
+            <div style={s.audioControls}>
+              <div style={s.audioRow}>
+                <PlayPauseBtn />
+                {isSpeaking && <button onClick={stopAudio} style={s.stopBtn}>⏹ Stop</button>}
+              </div>
+              <SettingsPanel />
+            </div>
+            <p style={s.disclaimer}>Ada is not an attorney. IEP Approved provides legal information only.</p>
+          </div>
+        )}
+
+        {/* CHAT PANEL */}
+        <div style={isMobile ? s.chatPanelMobile : s.chatPanelDesktop}>
+
+          {/* MESSAGES */}
+          <div style={isMobile ? s.chatAreaMobile : s.chatAreaDesktop}>
             {messages.map((msg, i) => (
-              <div key={i} style={msg.role==='user' ? styles.userBubble : styles.adaBubble}>
-                {msg.role === 'assistant' && <span style={styles.adaLabel}>Ada</span>}
-                <p style={styles.msgText}>{msg.content}</p>
+              <div key={i} style={msg.role==='user' ? s.userBubble : s.adaBubble}>
+                {msg.role === 'assistant' && <span style={s.adaLabel}>Ada</span>}
+                <p style={s.msgText}>{msg.content}</p>
               </div>
             ))}
             {isThinking && (
-              <div style={styles.adaBubble}>
-                <span style={styles.adaLabel}>Ada</span>
-                <div style={styles.thinkingWrap}>
-                  <div style={styles.dot1} />
-                  <div style={styles.dot2} />
-                  <div style={styles.dot3} />
-                  <span style={styles.thinkingText}>
-                    {lang === 'es' ? 'Buscando en la ley federal...' : 'Searching federal law...'}
+              <div style={s.adaBubble}>
+                <span style={s.adaLabel}>Ada</span>
+                <div style={s.thinkingWrap}>
+                  <div style={s.dot1} /><div style={s.dot2} /><div style={s.dot3} />
+                  <span style={s.thinkingText}>
+                    {lang === 'es' ? 'Buscando...' : 'Searching...'}
                   </span>
                 </div>
               </div>
@@ -403,69 +494,75 @@ export default function AdaPage() {
             <div ref={chatBottomRef} />
           </div>
 
-          <div style={styles.inputArea}>
+          {/* INPUT */}
+          <div style={s.inputArea}>
             <textarea ref={inputRef} value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
               placeholder={lang==='es' ? 'Hazle una pregunta a Ada...' : 'Ask Ada a question...'}
-              style={styles.textarea} rows={2} disabled={isThinking} />
-            <button onClick={() => sendMessage()} disabled={isThinking || !input.trim()} style={styles.sendBtn}>
+              style={isMobile ? s.textareaMobile : s.textarea}
+              rows={2} disabled={isThinking} />
+            <button onClick={() => sendMessage()} disabled={isThinking || !input.trim()}
+              style={isMobile ? s.sendBtnMobile : s.sendBtn}>
               {lang === 'es' ? 'Enviar' : 'Send'}
             </button>
           </div>
 
-          <div style={styles.micRow}>
+          {/* MIC BUTTONS */}
+          <div style={isMobile ? s.micRowMobile : s.micRow}>
             <button onClick={() => isListeningEN ? stopListening() : startListening('en-US')}
-              style={{...styles.micBtn, ...(isListeningEN ? styles.micActive : {})}}>
-              <span>🎤</span>
+              style={{...(isMobile ? s.micBtnMobile : s.micBtn), ...(isListeningEN ? s.micActive : {})}}>
+              <span style={s.micIcon}>🎤</span>
               <span>{isListeningEN ? 'Listening...' : 'Speak to Ask Ada'}</span>
-              {isListeningEN && <span style={styles.recDot} />}
+              {isListeningEN && <span style={s.recDot} />}
             </button>
             <button onClick={() => isListeningES ? stopListening() : startListening('es-ES')}
-              style={{...styles.micBtn, ...styles.micSpanish, ...(isListeningES ? styles.micActive : {})}}>
-              <span>🎤</span>
+              style={{...(isMobile ? s.micBtnMobile : s.micBtn), ...s.micSpanish, ...(isListeningES ? s.micActive : {})}}>
+              <span style={s.micIcon}>🎤</span>
               <span>{isListeningES ? 'Escuchando...' : 'Habla con Ada'}</span>
-              {isListeningES && <span style={styles.recDot} />}
+              {isListeningES && <span style={s.recDot} />}
             </button>
           </div>
 
+          {/* QUESTION COUNTER */}
           {userTier !== 'unlimited' && (
-            <p style={styles.counter}>
+            <p style={s.counter}>
               {lang==='es' ? `${questionsLeft} preguntas restantes` : `${questionsLeft} questions remaining`}
               {' · '}
-              <Link href="/signup" style={styles.upgradeLink}>
-                {lang==='es' ? 'Obtener Ada Sin Límites' : 'Get Ada Unlimited'}
+              <Link href="/signup" style={s.upgradeLink}>
+                {lang==='es' ? 'Ada Sin Límites' : 'Get Ada Unlimited'}
               </Link>
             </p>
           )}
         </div>
       </div>
 
+      {/* LIMIT MODAL */}
       {showLimitModal && (
-        <div style={styles.overlay} onClick={() => setShowLimitModal(false)}>
-          <div style={styles.modal} onClick={e => e.stopPropagation()}>
-            <button onClick={() => setShowLimitModal(false)} style={styles.modalClose}>✕</button>
-            <h3 style={styles.modalTitle}>
+        <div style={s.overlay} onClick={() => setShowLimitModal(false)}>
+          <div style={s.modal} onClick={e => e.stopPropagation()}>
+            <button onClick={() => setShowLimitModal(false)} style={s.modalClose}>✕</button>
+            <h3 style={s.modalTitle}>
               {lang==='es' ? 'Has alcanzado tu límite gratuito' : "You've reached your free limit"}
             </h3>
-            <Link href="/signup" style={styles.modalPrimary}>
+            <Link href="/signup" style={s.modalPrimary}>
               ⭐ {lang==='es' ? 'Ada Sin Límites — $4.99/mes' : 'Ada Unlimited — $4.99/month'}
             </Link>
-            <div style={styles.modalOr}>{lang==='es' ? '— o —' : '— or —'}</div>
+            <div style={s.modalOr}>{lang==='es' ? '— o —' : '— or —'}</div>
             {!limitEmailSent ? (
-              <form onSubmit={handleLimitSignup} style={styles.modalForm}>
-                <p style={styles.modalFreeLabel}>
+              <form onSubmit={handleLimitSignup} style={s.modalForm}>
+                <p style={s.modalFreeLabel}>
                   {lang==='es' ? 'Regístrate gratis — 10 preguntas/mes' : 'Sign up free — 10 questions/month'}
                 </p>
                 <input type="email" value={limitEmail} onChange={e=>setLimitEmail(e.target.value)}
                   placeholder={lang==='es'?'Tu correo electrónico':'Your email address'}
-                  style={styles.modalInput} required />
-                <button type="submit" style={styles.modalFreeBtn}>
-                  {lang==='es' ? 'Continuar' : 'Continue'}
+                  style={s.modalInput} required />
+                <button type="submit" style={s.modalFreeBtn}>
+                  {lang==='es' ? 'Continuar' : 'Continue →'}
                 </button>
               </form>
             ) : (
-              <p style={styles.modalSuccess}>✅ {lang==='es'?'¡Listo! Redirigiendo...':'Done! Redirecting...'}</p>
+              <p style={s.modalSuccess}>✅ {lang==='es'?'¡Listo! Redirigiendo...':'Done! Redirecting...'}</p>
             )}
           </div>
         </div>
@@ -476,72 +573,126 @@ export default function AdaPage() {
           0%,60%,100%{transform:translateY(0)}
           30%{transform:translateY(-8px)}
         }
-        input[type=range]{accent-color:#D4A843;}
+        * { box-sizing: border-box; }
+        input[type=range]{ accent-color:#D4A843; width:100%; }
+        body { margin:0; overflow-x:hidden; }
       `}</style>
     </>
   );
 }
 
-const styles = {
-  nav:{position:'sticky',top:0,zIndex:100,backgroundColor:'#2D1B4E',borderBottom:'2px solid #D4A843'},
-  navInner:{maxWidth:'1200px',margin:'0 auto',padding:'0 24px',height:'68px',display:'flex',alignItems:'center',justifyContent:'space-between'},
-  logoLink:{textDecoration:'none',display:'flex',alignItems:'center'},
-  logo:{height:'44px',width:'auto',objectFit:'contain'},
-  logoFallback:{alignItems:'center',gap:'4px'},
-  logoIEP:{fontSize:'20px',fontWeight:'800',color:'#D4A843',fontFamily:'Cormorant Garamond,serif',letterSpacing:'2px'},
-  logoApproved:{fontSize:'20px',fontWeight:'800',color:'#fff',fontFamily:'Cormorant Garamond,serif',letterSpacing:'2px'},
-  navLinks:{display:'flex',alignItems:'center',gap:'20px'},
+// ─── STYLES ───────────────────────────────────────────────────────────────────
+const s = {
+  // NAV
+  nav:{position:'sticky',top:0,zIndex:100,backgroundColor:'#2D1B4E',borderBottom:'2px solid #D4A843',width:'100%'},
+  navInner:{maxWidth:'1200px',margin:'0 auto',padding:'0 16px',height:'60px',display:'flex',alignItems:'center',justifyContent:'space-between'},
+  logoLink:{textDecoration:'none',display:'flex',alignItems:'center',flexShrink:0},
+  logo:{height:'40px',width:'auto',objectFit:'contain'},
+  logoFallback:{alignItems:'center',gap:'3px'},
+  logoIEP:{fontSize:'18px',fontWeight:'800',color:'#D4A843',fontFamily:'Cormorant Garamond,serif',letterSpacing:'2px'},
+  logoApp:{fontSize:'18px',fontWeight:'800',color:'#fff',fontFamily:'Cormorant Garamond,serif',letterSpacing:'2px'},
+  navLinks:{display:'flex',alignItems:'center',gap:'18px'},
   navLink:{color:'#e8e0f0',textDecoration:'none',fontSize:'14px',fontFamily:'Outfit,sans-serif',whiteSpace:'nowrap'},
   qBadge:{backgroundColor:'rgba(212,168,67,0.15)',border:'1px solid #D4A843',color:'#D4A843',padding:'3px 10px',borderRadius:'20px',fontSize:'12px',fontFamily:'Outfit,sans-serif',fontWeight:'600',whiteSpace:'nowrap'},
-  langToggle:{background:'rgba(255,255,255,0.08)',border:'2px solid rgba(212,168,67,0.6)',borderRadius:'20px',padding:'6px 14px',cursor:'pointer',display:'flex',alignItems:'center',gap:'4px',fontSize:'14px',fontFamily:'Outfit,sans-serif',fontWeight:'700'},
+  langToggle:{background:'rgba(255,255,255,0.08)',border:'2px solid rgba(212,168,67,0.6)',borderRadius:'20px',padding:'5px 12px',cursor:'pointer',display:'flex',alignItems:'center',gap:'4px',fontSize:'13px',fontFamily:'Outfit,sans-serif',fontWeight:'700'},
   langOn:{color:'#D4A843'},
   langOff:{color:'rgba(255,255,255,0.3)'},
   langDiv:{color:'rgba(255,255,255,0.2)'},
-  upgradeBtn:{backgroundColor:'#D4A843',color:'#2D1B4E',padding:'8px 16px',borderRadius:'6px',textDecoration:'none',fontSize:'13px',fontWeight:'800',fontFamily:'Outfit,sans-serif',whiteSpace:'nowrap'},
-  page:{minHeight:'calc(100vh - 68px)',backgroundColor:'#0f0a1a',display:'flex',fontFamily:'Outfit,sans-serif'},
-  leftPanel:{width:'260px',minWidth:'260px',backgroundColor:'#1a0f2e',borderRight:'1px solid rgba(212,168,67,0.2)',display:'flex',flexDirection:'column',alignItems:'center',padding:'28px 16px 20px',gap:'10px'},
-  adaRing:{width:'96px',height:'96px',borderRadius:'50%',border:'3px solid #D4A843',display:'flex',alignItems:'center',justifyContent:'center',position:'relative',overflow:'hidden',backgroundColor:'#2D1B4E',marginBottom:'4px'},
+  upgradeBtn:{backgroundColor:'#D4A843',color:'#2D1B4E',padding:'7px 14px',borderRadius:'6px',textDecoration:'none',fontSize:'13px',fontWeight:'800',fontFamily:'Outfit,sans-serif',whiteSpace:'nowrap'},
+
+  // MOBILE NAV
+  mobileNavRight:{display:'flex',alignItems:'center',gap:'10px'},
+  qBadgeSm:{backgroundColor:'rgba(212,168,67,0.15)',border:'1px solid #D4A843',color:'#D4A843',padding:'3px 8px',borderRadius:'20px',fontSize:'11px',fontWeight:'600'},
+  langToggleSm:{background:'rgba(255,255,255,0.08)',border:'2px solid rgba(212,168,67,0.6)',borderRadius:'20px',padding:'4px 10px',cursor:'pointer',display:'flex',alignItems:'center',gap:'3px',fontSize:'12px',fontFamily:'Outfit,sans-serif',fontWeight:'700'},
+  upgradeBtnSm:{backgroundColor:'#D4A843',color:'#2D1B4E',padding:'6px 10px',borderRadius:'6px',textDecoration:'none',fontSize:'14px',fontWeight:'800'},
+
+  // MOBILE TOP BAR
+  mobileTopBar:{backgroundColor:'#1a0f2e',borderBottom:'1px solid rgba(212,168,67,0.2)',padding:'10px 16px',display:'flex',flexDirection:'column',gap:'10px'},
+  mobileAdaInfo:{display:'flex',alignItems:'center',gap:'12px'},
+  mobileAvatar:{width:'44px',height:'44px',borderRadius:'50%',border:'2px solid #D4A843',position:'relative',overflow:'hidden',backgroundColor:'#2D1B4E',flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'box-shadow 0.3s'},
+  mobileAvatarImg:{width:'100%',height:'100%',objectFit:'cover',position:'absolute'},
+  mobileAvatarInit:{color:'#D4A843',fontSize:'16px',fontWeight:'800',fontFamily:'Cormorant Garamond,serif',zIndex:1},
+  mobileAdaName:{color:'#D4A843',fontSize:'15px',fontWeight:'700',fontFamily:'Cormorant Garamond,serif'},
+  mobileStatus:{display:'flex',alignItems:'center',gap:'5px',marginTop:'2px'},
+  mobileAudioRow:{display:'flex',gap:'8px',alignItems:'center'},
+  mobileAudioBtn:{flex:1,padding:'9px 12px',backgroundColor:'#D4A843',color:'#2D1B4E',border:'none',borderRadius:'8px',fontSize:'13px',fontWeight:'700',fontFamily:'Outfit,sans-serif',cursor:'pointer'},
+  mobileStopBtn:{padding:'9px 12px',backgroundColor:'rgba(239,68,68,0.15)',color:'#ef4444',border:'1px solid rgba(239,68,68,0.3)',borderRadius:'8px',fontSize:'13px',cursor:'pointer'},
+  settingsBtn:{padding:'9px 12px',backgroundColor:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.15)',borderRadius:'8px',fontSize:'16px',cursor:'pointer'},
+
+  // SETTINGS PANEL
+  settingsPanel:{display:'flex',flexDirection:'column',gap:'8px',padding:'10px',backgroundColor:'rgba(255,255,255,0.03)',borderRadius:'8px',border:'1px solid rgba(212,168,67,0.15)'},
+  volumeRow:{display:'flex',alignItems:'center',gap:'8px'},
+  progressRow:{display:'flex',alignItems:'center',gap:'6px'},
+  slider:{flex:1,cursor:'pointer'},
+  timeText:{color:'#b8a8d0',fontSize:'11px',whiteSpace:'nowrap'},
+  autoLabel:{color:'#b8a8d0',fontSize:'12px',cursor:'pointer',display:'flex',alignItems:'center'},
+
+  // STATUS
+  statusDot:{width:'7px',height:'7px',borderRadius:'50%',flexShrink:0,transition:'background-color 0.3s'},
+  statusText:{color:'#b8a8d0',fontSize:'11px'},
+
+  // DESKTOP LEFT PANEL
+  leftPanel:{width:'250px',minWidth:'250px',backgroundColor:'#1a0f2e',borderRight:'1px solid rgba(212,168,67,0.2)',display:'flex',flexDirection:'column',alignItems:'center',padding:'24px 14px 20px',gap:'10px'},
+  adaRing:{width:'90px',height:'90px',borderRadius:'50%',border:'3px solid #D4A843',display:'flex',alignItems:'center',justifyContent:'center',position:'relative',overflow:'hidden',backgroundColor:'#2D1B4E',marginBottom:'4px',transition:'box-shadow 0.3s'},
   adaAvatar:{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%',position:'absolute',zIndex:2},
   adaInitials:{color:'#D4A843',fontSize:'20px',fontWeight:'800',fontFamily:'Cormorant Garamond,serif',letterSpacing:'2px',zIndex:1},
-  adaName:{color:'#D4A843',fontSize:'22px',fontFamily:'Cormorant Garamond,serif',fontWeight:'700',margin:0},
+  adaName:{color:'#D4A843',fontSize:'20px',fontFamily:'Cormorant Garamond,serif',fontWeight:'700',margin:0},
   adaSubtitle:{color:'#b8a8d0',fontSize:'11px',textAlign:'center',margin:0,lineHeight:'1.4'},
   statusBadge:{display:'flex',alignItems:'center',gap:'6px',backgroundColor:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:'20px',padding:'5px 12px',fontSize:'12px',color:'#e8e0f0'},
-  statusDot:{width:'8px',height:'8px',borderRadius:'50%',flexShrink:0,transition:'background-color 0.3s'},
-  audioControls:{width:'100%',display:'flex',flexDirection:'column',gap:'8px',marginTop:'4px'},
+  audioControls:{width:'100%',display:'flex',flexDirection:'column',gap:'8px'},
   audioRow:{display:'flex',gap:'8px'},
   audioBtn:{flex:1,padding:'10px',backgroundColor:'#D4A843',color:'#2D1B4E',border:'none',borderRadius:'8px',fontSize:'13px',fontWeight:'700',fontFamily:'Outfit,sans-serif',cursor:'pointer'},
-  stopBtn:{padding:'10px 14px',backgroundColor:'rgba(239,68,68,0.15)',color:'#ef4444',border:'1px solid rgba(239,68,68,0.3)',borderRadius:'8px',fontSize:'13px',fontWeight:'700',cursor:'pointer'},
-  progressWrap:{display:'flex',alignItems:'center',gap:'6px'},
-  progressTime:{color:'#b8a8d0',fontSize:'11px',whiteSpace:'nowrap'},
-  progressBar:{flex:1,height:'4px',cursor:'pointer'},
-  volumeRow:{display:'flex',alignItems:'center',gap:'8px'},
-  volIcon:{fontSize:'16px'},
-  volumeSlider:{flex:1,cursor:'pointer'},
-  autoReadLabel:{color:'#b8a8d0',fontSize:'12px',cursor:'pointer',display:'flex',alignItems:'center'},
+  stopBtn:{padding:'10px 12px',backgroundColor:'rgba(239,68,68,0.15)',color:'#ef4444',border:'1px solid rgba(239,68,68,0.3)',borderRadius:'8px',fontSize:'13px',cursor:'pointer'},
   disclaimer:{color:'rgba(184,168,208,0.5)',fontSize:'10px',textAlign:'center',lineHeight:'1.5',marginTop:'auto',borderTop:'1px solid rgba(255,255,255,0.06)',paddingTop:'10px'},
-  rightPanel:{flex:1,display:'flex',flexDirection:'column',maxWidth:'800px',margin:'0 auto',padding:'20px 24px 0'},
-  chatArea:{flex:1,overflowY:'auto',display:'flex',flexDirection:'column',gap:'14px',paddingBottom:'12px',minHeight:'300px',maxHeight:'calc(100vh - 320px)'},
-  adaBubble:{backgroundColor:'#1a0f2e',border:'1px solid rgba(212,168,67,0.2)',borderRadius:'12px 12px 12px 4px',padding:'14px 16px',maxWidth:'85%',alignSelf:'flex-start'},
-  userBubble:{backgroundColor:'#2D1B4E',border:'1px solid rgba(212,168,67,0.3)',borderRadius:'12px 12px 4px 12px',padding:'14px 16px',maxWidth:'75%',alignSelf:'flex-end'},
-  adaLabel:{color:'#D4A843',fontSize:'11px',fontWeight:'700',letterSpacing:'1px',textTransform:'uppercase',display:'block',marginBottom:'6px'},
+
+  // PAGE LAYOUTS
+  pageDesktop:{minHeight:'calc(100vh - 60px)',backgroundColor:'#0f0a1a',display:'flex',fontFamily:'Outfit,sans-serif',overflow:'hidden'},
+  pageMobile:{minHeight:'calc(100vh - 60px)',backgroundColor:'#0f0a1a',display:'flex',flexDirection:'column',fontFamily:'Outfit,sans-serif',width:'100%',overflow:'hidden'},
+
+  // CHAT PANELS
+  chatPanelDesktop:{flex:1,display:'flex',flexDirection:'column',maxWidth:'800px',margin:'0 auto',padding:'16px 20px 0',width:'100%'},
+  chatPanelMobile:{flex:1,display:'flex',flexDirection:'column',padding:'12px 12px 0',width:'100%'},
+
+  // CHAT AREAS
+  chatAreaDesktop:{flex:1,overflowY:'auto',display:'flex',flexDirection:'column',gap:'12px',paddingBottom:'10px',maxHeight:'calc(100vh - 280px)'},
+  chatAreaMobile:{flex:1,overflowY:'auto',display:'flex',flexDirection:'column',gap:'10px',paddingBottom:'8px',maxHeight:'calc(100vh - 340px)'},
+
+  // BUBBLES
+  adaBubble:{backgroundColor:'#1a0f2e',border:'1px solid rgba(212,168,67,0.2)',borderRadius:'12px 12px 12px 4px',padding:'12px 14px',maxWidth:'88%',alignSelf:'flex-start'},
+  userBubble:{backgroundColor:'#2D1B4E',border:'1px solid rgba(212,168,67,0.3)',borderRadius:'12px 12px 4px 12px',padding:'12px 14px',maxWidth:'80%',alignSelf:'flex-end'},
+  adaLabel:{color:'#D4A843',fontSize:'10px',fontWeight:'700',letterSpacing:'1px',textTransform:'uppercase',display:'block',marginBottom:'5px'},
   msgText:{color:'#e8e0f0',fontSize:'15px',lineHeight:'1.6',margin:0,whiteSpace:'pre-wrap'},
-  thinkingWrap:{display:'flex',alignItems:'center',gap:'6px',padding:'4px 0'},
-  dot1:{width:'8px',height:'8px',borderRadius:'50%',backgroundColor:'#D4A843',animation:'bounce 1.2s infinite'},
-  dot2:{width:'8px',height:'8px',borderRadius:'50%',backgroundColor:'#D4A843',animation:'bounce 1.2s infinite 0.2s'},
-  dot3:{width:'8px',height:'8px',borderRadius:'50%',backgroundColor:'#D4A843',animation:'bounce 1.2s infinite 0.4s'},
+
+  // THINKING
+  thinkingWrap:{display:'flex',alignItems:'center',gap:'5px',padding:'3px 0'},
+  dot1:{width:'7px',height:'7px',borderRadius:'50%',backgroundColor:'#D4A843',animation:'bounce 1.2s infinite'},
+  dot2:{width:'7px',height:'7px',borderRadius:'50%',backgroundColor:'#D4A843',animation:'bounce 1.2s infinite 0.2s'},
+  dot3:{width:'7px',height:'7px',borderRadius:'50%',backgroundColor:'#D4A843',animation:'bounce 1.2s infinite 0.4s'},
   thinkingText:{color:'#b8a8d0',fontSize:'12px',marginLeft:'4px'},
-  inputArea:{display:'flex',gap:'10px',alignItems:'flex-end',padding:'14px 0 0',borderTop:'1px solid rgba(212,168,67,0.15)'},
-  textarea:{flex:1,backgroundColor:'#1a0f2e',border:'1px solid rgba(212,168,67,0.3)',borderRadius:'8px',color:'#e8e0f0',fontSize:'15px',fontFamily:'Outfit,sans-serif',padding:'12px 14px',resize:'none',outline:'none',lineHeight:'1.5'},
-  sendBtn:{backgroundColor:'#D4A843',color:'#2D1B4E',border:'none',borderRadius:'8px',padding:'12px 20px',fontSize:'14px',fontWeight:'700',fontFamily:'Outfit,sans-serif',cursor:'pointer',whiteSpace:'nowrap',alignSelf:'flex-end'},
-  micRow:{display:'flex',gap:'12px',padding:'12px 0'},
-  micBtn:{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:'8px',backgroundColor:'#1a0f2e',border:'2px solid rgba(212,168,67,0.4)',borderRadius:'10px',padding:'12px 16px',color:'#e8e0f0',fontSize:'13px',fontFamily:'Outfit,sans-serif',fontWeight:'600',cursor:'pointer',position:'relative'},
+
+  // INPUT
+  inputArea:{display:'flex',gap:'8px',alignItems:'flex-end',padding:'10px 0 0',borderTop:'1px solid rgba(212,168,67,0.15)'},
+  textarea:{flex:1,backgroundColor:'#1a0f2e',border:'1px solid rgba(212,168,67,0.3)',borderRadius:'8px',color:'#e8e0f0',fontSize:'15px',fontFamily:'Outfit,sans-serif',padding:'10px 12px',resize:'none',outline:'none',lineHeight:'1.5'},
+  textareaMobile:{flex:1,backgroundColor:'#1a0f2e',border:'1px solid rgba(212,168,67,0.3)',borderRadius:'8px',color:'#e8e0f0',fontSize:'16px',fontFamily:'Outfit,sans-serif',padding:'10px 12px',resize:'none',outline:'none',lineHeight:'1.5'},
+  sendBtn:{backgroundColor:'#D4A843',color:'#2D1B4E',border:'none',borderRadius:'8px',padding:'10px 18px',fontSize:'14px',fontWeight:'700',fontFamily:'Outfit,sans-serif',cursor:'pointer',whiteSpace:'nowrap',alignSelf:'flex-end'},
+  sendBtnMobile:{backgroundColor:'#D4A843',color:'#2D1B4E',border:'none',borderRadius:'8px',padding:'10px 14px',fontSize:'14px',fontWeight:'700',fontFamily:'Outfit,sans-serif',cursor:'pointer',whiteSpace:'nowrap',alignSelf:'flex-end'},
+
+  // MIC BUTTONS
+  micRow:{display:'flex',gap:'10px',padding:'10px 0'},
+  micRowMobile:{display:'flex',gap:'8px',padding:'10px 0'},
+  micBtn:{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:'8px',backgroundColor:'#1a0f2e',border:'2px solid rgba(212,168,67,0.4)',borderRadius:'10px',padding:'11px 14px',color:'#e8e0f0',fontSize:'13px',fontFamily:'Outfit,sans-serif',fontWeight:'600',cursor:'pointer',position:'relative'},
+  micBtnMobile:{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:'8px',backgroundColor:'#1a0f2e',border:'2px solid rgba(212,168,67,0.4)',borderRadius:'12px',padding:'16px 12px',color:'#e8e0f0',fontSize:'15px',fontFamily:'Outfit,sans-serif',fontWeight:'700',cursor:'pointer',position:'relative'},
   micSpanish:{borderColor:'rgba(212,168,67,0.7)',backgroundColor:'rgba(212,168,67,0.06)'},
   micActive:{backgroundColor:'rgba(212,168,67,0.15)',borderColor:'#D4A843',boxShadow:'0 0 12px rgba(212,168,67,0.3)'},
+  micIcon:{fontSize:'18px'},
   recDot:{width:'8px',height:'8px',borderRadius:'50%',backgroundColor:'#ef4444',position:'absolute',top:'8px',right:'8px',animation:'bounce 1s infinite'},
-  counter:{color:'rgba(184,168,208,0.6)',fontSize:'12px',textAlign:'center',padding:'4px 0 14px'},
+
+  counter:{color:'rgba(184,168,208,0.6)',fontSize:'12px',textAlign:'center',padding:'4px 0 10px'},
   upgradeLink:{color:'#D4A843',textDecoration:'none',fontWeight:'700'},
-  overlay:{position:'fixed',inset:0,backgroundColor:'rgba(0,0,0,0.75)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:200},
-  modal:{backgroundColor:'#1a0f2e',border:'2px solid #D4A843',borderRadius:'16px',padding:'36px 32px',maxWidth:'480px',width:'90%',textAlign:'center',position:'relative'},
+
+  // MODAL
+  overlay:{position:'fixed',inset:0,backgroundColor:'rgba(0,0,0,0.8)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:200,padding:'16px'},
+  modal:{backgroundColor:'#1a0f2e',border:'2px solid #D4A843',borderRadius:'16px',padding:'32px 24px',maxWidth:'460px',width:'100%',textAlign:'center',position:'relative'},
   modalClose:{position:'absolute',top:'12px',right:'14px',background:'none',border:'none',color:'rgba(184,168,208,0.5)',fontSize:'18px',cursor:'pointer'},
   modalTitle:{color:'#e8e0f0',fontSize:'20px',fontFamily:'Cormorant Garamond,serif',fontWeight:'700',marginBottom:'20px'},
   modalPrimary:{display:'block',backgroundColor:'#D4A843',color:'#2D1B4E',padding:'16px 24px',borderRadius:'10px',textDecoration:'none',fontSize:'16px',fontWeight:'800',fontFamily:'Outfit,sans-serif',marginBottom:'16px'},
