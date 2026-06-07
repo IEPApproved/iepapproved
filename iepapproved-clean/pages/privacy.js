@@ -128,6 +128,7 @@ export default function Privacy() {
           <a href="/terms">Terms of Service</a>
           <a href="/privacy">Privacy Policy</a>
           <a href="/disclaimer">Disclaimer</a>
+          <a href="/contact">Contact Us</a>
         </div>
       </footer>
     </>
