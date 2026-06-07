@@ -1,7 +1,4 @@
 // components/Nav.js
-// Shared navigation — used on homepage AND ada page
-// Includes: logo fix, EN|ES toggle, Storefront, Community links
-
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useLanguage } from '../context/LanguageContext';
@@ -20,19 +17,17 @@ export default function Nav({ questionCount = null }) {
       <nav style={styles.nav}>
         <div style={styles.inner}>
 
-          {/* LOGO — fixed to use next/image with fallback */}
+          {/* LOGO */}
           <Link href="/" style={styles.logoLink}>
             <img
               src="/images/logo.png"
               alt="IEP Approved"
               style={styles.logo}
               onError={(e) => {
-                // Fallback if logo image missing
                 e.target.style.display = 'none';
                 e.target.nextSibling.style.display = 'flex';
               }}
             />
-            {/* Text fallback logo */}
             <div style={{ ...styles.logoFallback, display: 'none' }}>
               <span style={styles.logoTextIEP}>IEP</span>
               <span style={styles.logoTextApproved}>APPROVED</span>
@@ -46,11 +41,8 @@ export default function Nav({ questionCount = null }) {
             <Link href="/community" style={styles.link}>{t('nav_community')}</Link>
             <Link href="/contact" style={styles.link}>{t('nav_contact')}</Link>
 
-            {/* QUESTION COUNT — shows on Ada page when passed */}
             {questionCount !== null && (
-              <span style={styles.questionBadge}>
-                {questionCount} {lang === 'es' ? 'preguntas' : 'questions'}
-              </span>
+              <span style={styles.questionBadge}>{questionCount}</span>
             )}
 
             {/* EN | ES TOGGLE */}
@@ -71,9 +63,9 @@ export default function Nav({ questionCount = null }) {
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label="Menu"
           >
-            <span style={{ ...styles.bar, transform: menuOpen ? 'rotate(45deg) translateY(8px)' : 'none' }} />
+            <span style={styles.bar} />
             <span style={{ ...styles.bar, opacity: menuOpen ? 0 : 1 }} />
-            <span style={{ ...styles.bar, transform: menuOpen ? 'rotate(-45deg) translateY(-8px)' : 'none' }} />
+            <span style={styles.bar} />
           </button>
         </div>
 
@@ -145,7 +137,6 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '24px',
-    '@media (maxWidth: 768px)': { display: 'none' },
   },
   link: {
     color: '#e8e0f0',
@@ -153,7 +144,6 @@ const styles = {
     fontSize: '14px',
     fontFamily: 'Outfit, sans-serif',
     fontWeight: '400',
-    transition: 'color 0.2s',
     whiteSpace: 'nowrap',
   },
   questionBadge: {
@@ -179,7 +169,6 @@ const styles = {
     fontSize: '13px',
     fontFamily: 'Outfit, sans-serif',
     fontWeight: '600',
-    transition: 'all 0.2s',
   },
   langActive: {
     color: '#D4A843',
@@ -200,7 +189,6 @@ const styles = {
     fontWeight: '700',
     fontFamily: 'Outfit, sans-serif',
     whiteSpace: 'nowrap',
-    transition: 'background 0.2s',
   },
   hamburger: {
     display: 'none',
@@ -210,13 +198,11 @@ const styles = {
     border: 'none',
     cursor: 'pointer',
     padding: '4px',
-    '@media (maxWidth: 768px)': { display: 'flex' },
   },
   bar: {
     width: '24px',
     height: '2px',
     backgroundColor: '#D4A843',
-    transition: 'all 0.3s',
     display: 'block',
   },
   mobileMenu: {
@@ -232,7 +218,6 @@ const styles = {
     textDecoration: 'none',
     fontSize: '16px',
     fontFamily: 'Outfit, sans-serif',
-    fontWeight: '400',
     padding: '8px 0',
     borderBottom: '1px solid rgba(255,255,255,0.08)',
   },
