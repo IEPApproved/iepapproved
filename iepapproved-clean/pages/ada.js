@@ -213,7 +213,7 @@ export default function AdaPage() {
       });
 
       const data = await response.json();
-      const reply = data.reply || 'I\'m sorry, I had trouble with that. Please try again.';
+      const reply = data.content || 'I\'m sorry, I had trouble with that. Please try again.';
 
       const assistantMessage = { role: 'assistant', content: reply };
       setMessages(prev => [...prev, assistantMessage]);
