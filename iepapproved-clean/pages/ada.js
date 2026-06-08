@@ -1,13 +1,19 @@
 // pages/ada.js — IEP Approved
-// UPDATED: Guest signup nudge banner — slides up after first question, dismissible
-// No other changes to existing functionality
+// Deploy 1: Full auth wiring
+// - Reads tier + question count from Supabase for logged-in users
+// - Hides nudge/upgrade for Unlimited members
+// - Shows personalized welcome greeting
+// - Shows state-specific badge for Unlimited members
+// - Nudge banner never shows for logged-in users
+// - Question count persisted in Supabase not just localStorage
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 
-const QUESTION_LIMIT_GUEST = 3;   // guests get 3 before nudge becomes hard wall
+const QUESTION_LIMIT_GUEST = 3;
 const QUESTION_LIMIT_FREE = 10;
 
 function cleanForElevenLabs(text, lang = 'en') {
@@ -37,6 +43,7 @@ function cleanForElevenLabs(text, lang = 'en') {
 
 export default function AdaPage() {
   const { lang, toggleLang } = useLanguage();
+  const { user, profile, loading: authLoading } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -50,16 +57,14 @@ export default function AdaPage() {
   const [audioProgress, setAudioProgress] = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
   const [questionCount, setQuestionCount] = useState(0);
-  const [userTier, setUserTier] = useState('guest');
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [limitEmail, setLimitEmail] = useState('');
   const [limitEmailSent, setLimitEmailSent] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-
-  // ── NUDGE BANNER STATE ──────────────────────────────────────────────────────
   const [showNudge, setShowNudge] = useState(false);
   const [nudgeDismissed, setNudgeDismissed] = useState(false);
+  const [welcomeShown, setWelcomeShown] = useState(false);
 
   const audioRef = useRef(null);
   const audioBlobUrlRef = useRef(null);
@@ -70,6 +75,15 @@ export default function AdaPage() {
   const chatBottomRef = useRef(null);
   const greetingPlayedRef = useRef(false);
 
+  // ── DERIVE TIER & LIMITS FROM SUPABASE PROFILE ──────────────────────────────
+  const userTier = profile?.tier || (user ? 'free' : 'guest');
+  const isUnlimited = userTier === 'unlimited';
+  const isGuest = !user;
+  const limit = isUnlimited ? Infinity : isGuest ? QUESTION_LIMIT_GUEST : QUESTION_LIMIT_FREE;
+  const questionsLeft = Math.max(0, limit - questionCount);
+  const isUrgent = isGuest && questionsLeft <= 1;
+  const displayName = profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || null;
+
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
     check();
@@ -79,13 +93,21 @@ export default function AdaPage() {
 
   useEffect(() => {
     setMounted(true);
-    const saved = localStorage.getItem('iep_question_count');
-    const savedTier = localStorage.getItem('iep_user_tier');
-    const nudgeSeen = localStorage.getItem('iep_nudge_dismissed');
-    if (saved) setQuestionCount(parseInt(saved));
-    if (savedTier) setUserTier(savedTier);
-    if (nudgeSeen) setNudgeDismissed(true);
+    // For guests, use localStorage; logged-in users use Supabase via API
+    if (!user) {
+      const saved = localStorage.getItem('iep_question_count');
+      const nudgeSeen = localStorage.getItem('iep_nudge_dismissed');
+      if (saved) setQuestionCount(parseInt(saved));
+      if (nudgeSeen) setNudgeDismissed(true);
+    }
   }, []);
+
+  // When profile loads for logged-in user, set question count from Supabase
+  useEffect(() => {
+    if (profile) {
+      setQuestionCount(profile.questions_used_today || 0);
+    }
+  }, [profile]);
 
   useEffect(() => {
     chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -162,17 +184,31 @@ export default function AdaPage() {
     }
   }, [lang, volume, stopAudio]);
 
+  // ── GREETING — personalized for logged-in users ─────────────────────────────
   useEffect(() => {
-    if (!mounted) return;
-    const greeting = lang === 'es'
-      ? '¡Hola! Soy Ada, tu guía de leyes del IEP. Pregúntame cualquier cosa sobre los derechos de tu hijo bajo IDEA, la Sección 504 o la ADA.'
-      : "Hello! I'm Ada, your IEP Approved AI Guide. Ask me anything about your child's rights under IDEA, Section 504, or ADA — in English or Spanish.";
+    if (!mounted || authLoading) return;
+
+    let greeting;
+    if (isUnlimited && displayName) {
+      greeting = lang === 'es'
+        ? `¡Bienvenida de nuevo, ${displayName}! Soy Ada. Tienes acceso ilimitado hoy — pregúntame lo que necesites sobre los derechos de tu hijo.`
+        : `Welcome back, ${displayName}! I'm Ada. You have unlimited access today — ask me anything about your child's rights under IDEA, Section 504, or ADA.`;
+    } else if (user && displayName) {
+      greeting = lang === 'es'
+        ? `¡Hola, ${displayName}! Soy Ada, tu guía de leyes del IEP. Tienes ${questionsLeft} preguntas este mes.`
+        : `Hi ${displayName}! I'm Ada, your IEP Approved AI Guide. You have ${questionsLeft} questions available this month.`;
+    } else {
+      greeting = lang === 'es'
+        ? '¡Hola! Soy Ada, tu guía de leyes del IEP. Pregúntame cualquier cosa sobre los derechos de tu hijo bajo IDEA, la Sección 504 o la ADA.'
+        : "Hello! I'm Ada, your IEP Approved AI Guide. Ask me anything about your child's rights under IDEA, Section 504, or ADA — in English or Spanish.";
+    }
+
     setMessages([{ role: 'assistant', content: greeting }]);
     if (!greetingPlayedRef.current && autoRead) {
       greetingPlayedRef.current = true;
       setTimeout(() => speakText(greeting, lang), 800);
     }
-  }, [lang, mounted]);
+  }, [lang, mounted, authLoading, user, profile]);
 
   const togglePause = () => {
     if (!audioRef.current) return;
@@ -251,9 +287,7 @@ export default function AdaPage() {
     if (!trimmed || isThinking) return;
     stopAudio();
 
-    const limit = userTier === 'guest' ? QUESTION_LIMIT_GUEST : userTier === 'free' ? QUESTION_LIMIT_FREE : Infinity;
-
-    // Hard wall — show modal
+    // Hard wall at limit
     if (questionCount >= limit) {
       setShowLimitModal(true);
       return;
@@ -262,7 +296,11 @@ export default function AdaPage() {
     setInput('');
     const newCount = questionCount + 1;
     setQuestionCount(newCount);
-    localStorage.setItem('iep_question_count', newCount);
+
+    // Guests use localStorage; logged-in users tracked server-side via API
+    if (!user) {
+      localStorage.setItem('iep_question_count', newCount);
+    }
 
     const userMessage = { role: 'user', content: trimmed };
     const updatedMessages = [...messages, userMessage];
@@ -276,14 +314,21 @@ export default function AdaPage() {
         body: JSON.stringify({ messages: updatedMessages, lang }),
       });
       const data = await response.json();
-      const reply = data.content || data.message || "I'm sorry, I had trouble with that. Please try again.";
+
+      // Handle daily limit response from server
+      if (response.status === 429 && data.upgrade) {
+        setIsThinking(false);
+        setShowLimitModal(true);
+        return;
+      }
+
+      const reply = data.message || data.content || "I'm sorry, I had trouble with that. Please try again.";
       setMessages(prev => [...prev, { role: 'assistant', content: reply }]);
       setIsThinking(false);
       if (autoRead) await speakText(reply, lang);
 
-      // ── SHOW NUDGE BANNER after answer is delivered ──
-      // Show after Q1 for guests, stay visible but dismissible
-      if (userTier === 'guest' && !nudgeDismissed) {
+      // Show nudge for guests only, after first answer, if not dismissed
+      if (isGuest && !nudgeDismissed) {
         setTimeout(() => setShowNudge(true), 600);
       }
 
@@ -320,10 +365,6 @@ export default function AdaPage() {
   };
 
   if (!mounted) return null;
-
-  const limit = userTier === 'guest' ? QUESTION_LIMIT_GUEST : userTier === 'free' ? QUESTION_LIMIT_FREE : 999;
-  const questionsLeft = Math.max(0, limit - questionCount);
-  const isUrgent = userTier === 'guest' && questionsLeft <= 1;
 
   const formatTime = (secs) => {
     if (!secs || isNaN(secs)) return '0:00';
@@ -371,11 +412,10 @@ export default function AdaPage() {
     </div>
   );
 
-  // ── NUDGE BANNER TEXT ────────────────────────────────────────────────────────
+  // Nudge text
   const nudgeTitle = isUrgent
     ? (lang === 'es' ? '⚡ Última pregunta gratuita de hoy' : '⚡ That was your last free question today')
     : (lang === 'es' ? `💬 Te quedan ${questionsLeft} preguntas gratis hoy` : `💬 You have ${questionsLeft} free question${questionsLeft !== 1 ? 's' : ''} left today`);
-
   const nudgeSubtext = lang === 'es'
     ? 'Crea una cuenta gratuita y obtén 10 preguntas cada mes — sin tarjeta de crédito.'
     : 'Create a free account and get 10 questions every month — no credit card needed.';
@@ -405,22 +445,46 @@ export default function AdaPage() {
               <Link href="/storefront" style={s.navLink}>Storefront</Link>
               <Link href="/community" style={s.navLink}>Community</Link>
               <Link href="/contact" style={s.navLink}>Contact</Link>
-              {userTier !== 'unlimited' && (
+
+              {/* ── UNLIMITED BADGE ── */}
+              {isUnlimited && profile?.state && (
+                <span style={s.unlimitedStateBadge}>
+                  ✦ {profile.state} Unlimited
+                </span>
+              )}
+              {isUnlimited && !profile?.state && (
+                <span style={s.unlimitedStateBadge}>✦ Unlimited</span>
+              )}
+
+              {/* Question counter — free/guest only */}
+              {!isUnlimited && (
                 <span style={s.qBadge}>{questionsLeft} {lang==='es'?'preguntas':'left'}</span>
               )}
+
               <button onClick={toggleLang} style={s.langToggle}>
                 <span style={lang==='en'?s.langOn:s.langOff}>EN</span>
                 <span style={s.langDiv}>|</span>
                 <span style={lang==='es'?s.langOn:s.langOff}>ES</span>
               </button>
-              {userTier !== 'unlimited' && (
-                <Link href="/signup" style={s.upgradeBtn}>⭐ Ada Unlimited</Link>
+
+              {/* Show upgrade or my account */}
+              {isUnlimited ? (
+                <Link href="/login" style={s.myAccountBtn}>My Account</Link>
+              ) : user ? (
+                <Link href="/signup" style={s.upgradeBtn}>⭐ Upgrade</Link>
+              ) : (
+                <>
+                  <Link href="/login" style={s.signInBtnNav}>Sign In</Link>
+                  <Link href="/signup" style={s.upgradeBtn}>⭐ Ada Unlimited</Link>
+                </>
               )}
             </div>
           )}
           {isMobile && (
             <div style={s.mobileNavRight}>
-              {userTier !== 'unlimited' && (
+              {isUnlimited ? (
+                <span style={s.unlimitedBadgeSm}>✦</span>
+              ) : (
                 <span style={s.qBadgeSm}>{questionsLeft}</span>
               )}
               <button onClick={toggleLang} style={s.langToggleSm}>
@@ -428,7 +492,7 @@ export default function AdaPage() {
                 <span style={s.langDiv}>|</span>
                 <span style={lang==='es'?s.langOn:s.langOff}>ES</span>
               </button>
-              {userTier !== 'unlimited' && (
+              {!isUnlimited && (
                 <Link href="/signup" style={s.upgradeBtnSm}>⭐</Link>
               )}
             </div>
@@ -453,6 +517,10 @@ export default function AdaPage() {
                   {isThinking?(lang==='es'?'Pensando...':'Thinking...'):isSpeaking?(lang==='es'?'Hablando...':'Speaking...'):(lang==='es'?'En línea':'Online')}
                 </span>
               </div>
+              {/* Mobile unlimited badge */}
+              {isUnlimited && (
+                <div style={s.mobileUnlimitedBadge}>✦ {profile?.state ? `${profile.state} Unlimited` : 'Unlimited'}</div>
+              )}
             </div>
           </div>
           <div style={s.mobileAudioRow}>
@@ -479,6 +547,22 @@ export default function AdaPage() {
             </div>
             <h2 style={s.adaName}>Ada</h2>
             <p style={s.adaSubtitle}>Your IEP Approved AI Guide</p>
+
+            {/* Logged-in user info on desktop panel */}
+            {user && (
+              <div style={s.userInfoPanel}>
+                <div style={s.userInfoName}>{displayName || user.email}</div>
+                {isUnlimited ? (
+                  <div style={s.userInfoTier}>✦ Ada Unlimited · Active</div>
+                ) : (
+                  <div style={s.userInfoTierFree}>{questionsLeft} questions left this month</div>
+                )}
+                {isUnlimited && profile?.state && (
+                  <div style={s.userInfoState}>📍 {profile.state}</div>
+                )}
+              </div>
+            )}
+
             <div style={s.statusBadge}>
               <span style={{...s.statusDot, backgroundColor: isThinking?'#f59e0b':isSpeaking?'#D4A843':'#22c55e'}} />
               {isThinking?(lang==='es'?'Pensando...':'Thinking...'):isSpeaking?(lang==='es'?'Hablando...':'Speaking...'):(lang==='es'?'En línea':'Online')}
@@ -490,6 +574,14 @@ export default function AdaPage() {
               </div>
               <SettingsPanel />
             </div>
+
+            {/* Upgrade CTA for non-unlimited logged-in users */}
+            {user && !isUnlimited && (
+              <Link href="/signup" style={s.sidebarUpgrade}>
+                ⭐ Upgrade to Unlimited
+              </Link>
+            )}
+
             <p style={s.disclaimer}>Ada is not an attorney. IEP Approved provides legal information only.</p>
           </div>
         )}
@@ -545,9 +637,13 @@ export default function AdaPage() {
             </button>
           </div>
 
-          {userTier !== 'unlimited' && (
+          {/* Counter — guests and free users only */}
+          {!isUnlimited && (
             <p style={s.counter}>
-              {lang==='es' ? `${questionsLeft} preguntas restantes` : `${questionsLeft} questions remaining`}
+              {isGuest
+                ? (lang==='es' ? `${questionsLeft} preguntas de prueba restantes` : `${questionsLeft} trial questions remaining`)
+                : (lang==='es' ? `${questionsLeft} preguntas restantes este mes` : `${questionsLeft} questions remaining this month`)
+              }
               {' · '}
               <Link href="/signup" style={s.upgradeLink}>
                 {lang==='es' ? 'Ada Sin Límites' : 'Get Ada Unlimited'}
@@ -557,68 +653,37 @@ export default function AdaPage() {
         </div>
       </div>
 
-      {/* ── NUDGE BANNER ── slides up from bottom after first answer ── */}
-      {showNudge && userTier === 'guest' && (
+      {/* ── NUDGE BANNER — guests only, never logged-in users ── */}
+      {showNudge && isGuest && !user && (
         <div style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          zIndex: 150,
-          backgroundColor: isUrgent ? '#1a0f2e' : '#1a0f2e',
-          borderTop: `2px solid ${isUrgent ? '#ef4444' : '#D4A843'}`,
-          padding: '16px 20px',
-          boxShadow: '0 -8px 32px rgba(0,0,0,0.5)',
-          animation: 'slideUp 0.4s ease-out',
+          position:'fixed', bottom:0, left:0, right:0, zIndex:150,
+          backgroundColor:'#1a0f2e',
+          borderTop:`2px solid ${isUrgent ? '#ef4444' : '#D4A843'}`,
+          padding:'16px 20px',
+          boxShadow:'0 -8px 32px rgba(0,0,0,0.5)',
+          animation:'slideUp 0.4s ease-out',
         }}>
-          <button
-            onClick={dismissNudge}
-            style={{
-              position: 'absolute', top: '12px', right: '16px',
-              background: 'none', border: 'none', color: 'rgba(184,168,208,0.5)',
-              fontSize: '18px', cursor: 'pointer', lineHeight: 1,
-            }}
-          >✕</button>
-
-          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-            <p style={{
-              color: isUrgent ? '#ef4444' : '#D4A843',
-              fontWeight: '700', fontSize: '15px',
-              fontFamily: 'Outfit, sans-serif', margin: '0 0 4px',
-            }}>
+          <button onClick={dismissNudge} style={{
+            position:'absolute', top:'12px', right:'16px',
+            background:'none', border:'none', color:'rgba(184,168,208,0.5)',
+            fontSize:'18px', cursor:'pointer', lineHeight:1,
+          }}>✕</button>
+          <div style={{ maxWidth:'700px', margin:'0 auto' }}>
+            <p style={{ color: isUrgent ? '#ef4444' : '#D4A843', fontWeight:'700', fontSize:'15px', fontFamily:'Outfit,sans-serif', margin:'0 0 4px' }}>
               {nudgeTitle}
             </p>
-            <p style={{
-              color: '#b8a8d0', fontSize: '13px',
-              fontFamily: 'Outfit, sans-serif', margin: '0 0 12px',
-            }}>
+            <p style={{ color:'#b8a8d0', fontSize:'13px', fontFamily:'Outfit,sans-serif', margin:'0 0 12px' }}>
               {nudgeSubtext}
             </p>
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-              <Link href="/login?mode=signup" style={{
-                backgroundColor: '#D4A843', color: '#2D1B4E',
-                padding: '10px 20px', borderRadius: '8px',
-                textDecoration: 'none', fontSize: '14px', fontWeight: '800',
-                fontFamily: 'Outfit, sans-serif', whiteSpace: 'nowrap',
-              }}>
-                {lang === 'es' ? 'Crear Cuenta Gratis' : 'Create Free Account'}
+            <div style={{ display:'flex', gap:'10px', flexWrap:'wrap' }}>
+              <Link href="/login?mode=signup" style={{ backgroundColor:'#D4A843', color:'#2D1B4E', padding:'10px 20px', borderRadius:'8px', textDecoration:'none', fontSize:'14px', fontWeight:'800', fontFamily:'Outfit,sans-serif', whiteSpace:'nowrap' }}>
+                {lang==='es' ? 'Crear Cuenta Gratis' : 'Create Free Account'}
               </Link>
-              <Link href="/signup" style={{
-                backgroundColor: 'transparent',
-                border: '1px solid #D4A843', color: '#D4A843',
-                padding: '10px 20px', borderRadius: '8px',
-                textDecoration: 'none', fontSize: '14px', fontWeight: '700',
-                fontFamily: 'Outfit, sans-serif', whiteSpace: 'nowrap',
-              }}>
-                {lang === 'es' ? 'Ada Sin Límites — $4.99/mes' : 'Ada Unlimited — $4.99/mo'}
+              <Link href="/signup" style={{ backgroundColor:'transparent', border:'1px solid #D4A843', color:'#D4A843', padding:'10px 20px', borderRadius:'8px', textDecoration:'none', fontSize:'14px', fontWeight:'700', fontFamily:'Outfit,sans-serif', whiteSpace:'nowrap' }}>
+                {lang==='es' ? 'Ada Sin Límites — $4.99/mes' : 'Ada Unlimited — $4.99/mo'}
               </Link>
-              <button onClick={dismissNudge} style={{
-                background: 'none', border: 'none',
-                color: 'rgba(184,168,208,0.5)', fontSize: '13px',
-                fontFamily: 'Outfit, sans-serif', cursor: 'pointer',
-                padding: '10px 4px', whiteSpace: 'nowrap',
-              }}>
-                {lang === 'es' ? 'Quizás después' : 'Maybe later'}
+              <button onClick={dismissNudge} style={{ background:'none', border:'none', color:'rgba(184,168,208,0.5)', fontSize:'13px', fontFamily:'Outfit,sans-serif', cursor:'pointer', padding:'10px 4px', whiteSpace:'nowrap' }}>
+                {lang==='es' ? 'Quizás después' : 'Maybe later'}
               </button>
             </div>
           </div>
@@ -631,13 +696,13 @@ export default function AdaPage() {
           <div style={s.modal} onClick={e => e.stopPropagation()}>
             <button onClick={() => setShowLimitModal(false)} style={s.modalClose}>✕</button>
             <h3 style={s.modalTitle}>
-              {lang==='es' ? 'Has alcanzado tu límite gratuito' : "You've reached your free limit"}
+              {lang==='es' ? 'Has alcanzado tu límite' : "You've reached your limit"}
             </h3>
             <Link href="/signup" style={s.modalPrimary}>
               ⭐ {lang==='es' ? 'Ada Sin Límites — $4.99/mes' : 'Ada Unlimited — $4.99/month'}
             </Link>
             <div style={s.modalOr}>{lang==='es' ? '— o —' : '— or —'}</div>
-            {!limitEmailSent ? (
+            {!user && !limitEmailSent ? (
               <form onSubmit={handleLimitSignup} style={s.modalForm}>
                 <p style={s.modalFreeLabel}>
                   {lang==='es' ? 'Regístrate gratis — 10 preguntas/mes' : 'Sign up free — 10 questions/month'}
@@ -649,8 +714,14 @@ export default function AdaPage() {
                   {lang==='es' ? 'Continuar' : 'Continue →'}
                 </button>
               </form>
-            ) : (
+            ) : !user && limitEmailSent ? (
               <p style={s.modalSuccess}>✅ {lang==='es'?'¡Listo! Redirigiendo...':'Done! Redirecting...'}</p>
+            ) : (
+              <div style={{ textAlign:'center' }}>
+                <p style={{ color:'#b8a8d0', fontSize:'14px', marginBottom:'12px' }}>
+                  {lang==='es' ? 'Actualiza para continuar con preguntas ilimitadas.' : 'Upgrade for unlimited questions.'}
+                </p>
+              </div>
             )}
           </div>
         </div>
@@ -681,15 +752,19 @@ const s = {
   logoFallback:{alignItems:'center',gap:'3px'},
   logoIEP:{fontSize:'18px',fontWeight:'800',color:'#D4A843',fontFamily:'Cormorant Garamond,serif',letterSpacing:'2px'},
   logoApp:{fontSize:'18px',fontWeight:'800',color:'#fff',fontFamily:'Cormorant Garamond,serif',letterSpacing:'2px'},
-  navLinks:{display:'flex',alignItems:'center',gap:'18px'},
+  navLinks:{display:'flex',alignItems:'center',gap:'14px'},
   navLink:{color:'#e8e0f0',textDecoration:'none',fontSize:'14px',fontFamily:'Outfit,sans-serif',whiteSpace:'nowrap'},
+  unlimitedStateBadge:{backgroundColor:'rgba(212,168,67,0.15)',border:'1px solid #D4A843',color:'#D4A843',padding:'3px 10px',borderRadius:'20px',fontSize:'12px',fontFamily:'Outfit,sans-serif',fontWeight:'700',whiteSpace:'nowrap'},
   qBadge:{backgroundColor:'rgba(212,168,67,0.15)',border:'1px solid #D4A843',color:'#D4A843',padding:'3px 10px',borderRadius:'20px',fontSize:'12px',fontFamily:'Outfit,sans-serif',fontWeight:'600',whiteSpace:'nowrap'},
   langToggle:{background:'rgba(255,255,255,0.08)',border:'2px solid rgba(212,168,67,0.6)',borderRadius:'20px',padding:'5px 12px',cursor:'pointer',display:'flex',alignItems:'center',gap:'4px',fontSize:'13px',fontFamily:'Outfit,sans-serif',fontWeight:'700'},
   langOn:{color:'#D4A843'},
   langOff:{color:'rgba(255,255,255,0.3)'},
   langDiv:{color:'rgba(255,255,255,0.2)'},
   upgradeBtn:{backgroundColor:'#D4A843',color:'#2D1B4E',padding:'7px 14px',borderRadius:'6px',textDecoration:'none',fontSize:'13px',fontWeight:'800',fontFamily:'Outfit,sans-serif',whiteSpace:'nowrap'},
+  myAccountBtn:{backgroundColor:'rgba(212,168,67,0.15)',border:'1px solid #D4A843',color:'#D4A843',padding:'7px 14px',borderRadius:'6px',textDecoration:'none',fontSize:'13px',fontWeight:'700',fontFamily:'Outfit,sans-serif',whiteSpace:'nowrap'},
+  signInBtnNav:{color:'#e8e0f0',textDecoration:'none',fontSize:'13px',fontFamily:'Outfit,sans-serif',fontWeight:'600',border:'1px solid rgba(255,255,255,0.2)',padding:'6px 12px',borderRadius:'6px',whiteSpace:'nowrap'},
   mobileNavRight:{display:'flex',alignItems:'center',gap:'10px'},
+  unlimitedBadgeSm:{backgroundColor:'rgba(212,168,67,0.2)',border:'1px solid #D4A843',color:'#D4A843',padding:'3px 8px',borderRadius:'20px',fontSize:'12px',fontWeight:'700'},
   qBadgeSm:{backgroundColor:'rgba(212,168,67,0.15)',border:'1px solid #D4A843',color:'#D4A843',padding:'3px 8px',borderRadius:'20px',fontSize:'11px',fontWeight:'600'},
   langToggleSm:{background:'rgba(255,255,255,0.08)',border:'2px solid rgba(212,168,67,0.6)',borderRadius:'20px',padding:'4px 10px',cursor:'pointer',display:'flex',alignItems:'center',gap:'3px',fontSize:'12px',fontFamily:'Outfit,sans-serif',fontWeight:'700'},
   upgradeBtnSm:{backgroundColor:'#D4A843',color:'#2D1B4E',padding:'6px 10px',borderRadius:'6px',textDecoration:'none',fontSize:'14px',fontWeight:'800'},
@@ -700,6 +775,7 @@ const s = {
   mobileAvatarInit:{color:'#D4A843',fontSize:'16px',fontWeight:'800',fontFamily:'Cormorant Garamond,serif',zIndex:1},
   mobileAdaName:{color:'#D4A843',fontSize:'15px',fontWeight:'700',fontFamily:'Cormorant Garamond,serif'},
   mobileStatus:{display:'flex',alignItems:'center',gap:'5px',marginTop:'2px'},
+  mobileUnlimitedBadge:{color:'#D4A843',fontSize:'11px',fontWeight:'700',fontFamily:'Outfit,sans-serif',marginTop:'3px'},
   mobileAudioRow:{display:'flex',gap:'8px',alignItems:'center'},
   mobileAudioBtn:{flex:1,padding:'9px 12px',backgroundColor:'#D4A843',color:'#2D1B4E',border:'none',borderRadius:'8px',fontSize:'13px',fontWeight:'700',fontFamily:'Outfit,sans-serif',cursor:'pointer'},
   mobileStopBtn:{padding:'9px 12px',backgroundColor:'rgba(239,68,68,0.15)',color:'#ef4444',border:'1px solid rgba(239,68,68,0.3)',borderRadius:'8px',fontSize:'13px',cursor:'pointer'},
@@ -718,11 +794,17 @@ const s = {
   adaInitials:{color:'#D4A843',fontSize:'20px',fontWeight:'800',fontFamily:'Cormorant Garamond,serif',letterSpacing:'2px',zIndex:1,display:'none'},
   adaName:{color:'#D4A843',fontSize:'20px',fontFamily:'Cormorant Garamond,serif',fontWeight:'700',margin:0},
   adaSubtitle:{color:'#b8a8d0',fontSize:'11px',textAlign:'center',margin:0,lineHeight:'1.4'},
+  userInfoPanel:{width:'100%',backgroundColor:'rgba(212,168,67,0.06)',border:'1px solid rgba(212,168,67,0.2)',borderRadius:'10px',padding:'10px 12px',textAlign:'center'},
+  userInfoName:{color:'#e8e0f0',fontSize:'13px',fontWeight:'700',fontFamily:'Outfit,sans-serif',marginBottom:'3px'},
+  userInfoTier:{color:'#D4A843',fontSize:'11px',fontWeight:'700',fontFamily:'Outfit,sans-serif'},
+  userInfoTierFree:{color:'#b8a8d0',fontSize:'11px',fontFamily:'Outfit,sans-serif'},
+  userInfoState:{color:'#b8a8d0',fontSize:'11px',fontFamily:'Outfit,sans-serif',marginTop:'3px'},
   statusBadge:{display:'flex',alignItems:'center',gap:'6px',backgroundColor:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:'20px',padding:'5px 12px',fontSize:'12px',color:'#e8e0f0'},
   audioControls:{width:'100%',display:'flex',flexDirection:'column',gap:'8px'},
   audioRow:{display:'flex',gap:'8px'},
   audioBtn:{flex:1,padding:'10px',backgroundColor:'#D4A843',color:'#2D1B4E',border:'none',borderRadius:'8px',fontSize:'13px',fontWeight:'700',fontFamily:'Outfit,sans-serif',cursor:'pointer'},
   stopBtn:{padding:'10px 12px',backgroundColor:'rgba(239,68,68,0.15)',color:'#ef4444',border:'1px solid rgba(239,68,68,0.3)',borderRadius:'8px',fontSize:'13px',cursor:'pointer'},
+  sidebarUpgrade:{display:'block',width:'100%',backgroundColor:'#D4A843',color:'#2D1B4E',padding:'10px',borderRadius:'8px',textDecoration:'none',fontSize:'13px',fontWeight:'800',fontFamily:'Outfit,sans-serif',textAlign:'center',marginTop:'4px'},
   disclaimer:{color:'rgba(184,168,208,0.5)',fontSize:'10px',textAlign:'center',lineHeight:'1.5',marginTop:'auto',borderTop:'1px solid rgba(255,255,255,0.06)',paddingTop:'10px'},
   pageDesktop:{minHeight:'calc(100vh - 60px)',backgroundColor:'#0f0a1a',display:'flex',fontFamily:'Outfit,sans-serif',overflow:'hidden'},
   pageMobile:{minHeight:'calc(100vh - 60px)',backgroundColor:'#0f0a1a',display:'flex',flexDirection:'column',fontFamily:'Outfit,sans-serif',width:'100%',overflow:'hidden'},
