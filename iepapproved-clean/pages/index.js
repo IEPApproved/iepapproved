@@ -484,7 +484,7 @@ const s = {
   photoGallery:{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'12px',marginBottom:'48px'},
   photoWrap:{borderRadius:'12px',overflow:'hidden',aspectRatio:'4/3',backgroundColor:'#f3f4f6'},
   photo:{width:'100%',height:'100%',objectFit:'cover',display:'block'},
-  storyLayout:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'48px',alignItems:'start'},
+  storyLayout:{display:'flex',flexDirection:'column',gap:'16px'},
   storyText:{display:'flex',flexDirection:'column',gap:'16px'},
   storyPara:{color:'#374151',fontSize:'16px',lineHeight:'1.8',fontFamily:'Outfit,sans-serif',margin:0},
   storyQuote:{borderLeft:'4px solid #D4A843',paddingLeft:'20px',margin:'8px 0',color:'#2D1B4E',fontSize:'16px',fontStyle:'italic',lineHeight:'1.8',fontFamily:'Cormorant Garamond,serif'},
