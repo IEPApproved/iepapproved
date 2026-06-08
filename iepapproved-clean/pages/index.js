@@ -109,13 +109,13 @@ export default function HomePage() {
   ];
 
   const robbiePhotos = [
-    { src: '/Robbie Baseball.jpg', alt: 'Robbie at Baseball' },
-    { src: '/Robbie Birthday.jpg', alt: "Robbie's Birthday" },
-    { src: '/Robbie Boat.jpg', alt: 'Robbie on the Boat' },
-    { src: '/Robbie Brevard Zoo....jpg', alt: 'Robbie at Brevard Zoo' },
-    { src: '/Robbie Marthon Key....jpg', alt: 'Robbie at Marathon Key' },
-    { src: '/Robbie St. Augustin....jpg', alt: 'Robbie in St. Augustine' },
-  ];
+  { src: '/Robbie St. Augustine.jpg', alt: 'Robbie in St. Augustine' },
+  { src: '/Robbie Birthday.jpg', alt: "Robbie's Birthday" },
+  { src: '/Robbie Boat.jpg', alt: 'Robbie on the Boat' },
+  { src: '/Robbie Brevard Zoo.jpg', alt: 'Robbie at Brevard Zoo' },
+  { src: '/Robbie Marthon Key.jpg', alt: 'Robbie at Marathon Key' },
+  { src: '/kim-and-robbie.jpeg', alt: 'Kimberly and Robbie' },
+];
 
   return (
     <>
