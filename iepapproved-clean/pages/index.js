@@ -109,7 +109,7 @@ export default function HomePage() {
   ];
 
   const robbiePhotos = [
-    { src: '/Robbie St. Augustin....jpg', alt: 'Robbie in St. Augustine' },
+    { src: '/Robbie Baseball.jpg', alt: 'Robbie at Baseball' },
     { src: '/Robbie Birthday.jpg', alt: "Robbie's Birthday" },
     { src: '/Robbie Boat.jpg', alt: 'Robbie on the Boat' },
     { src: '/Robbie Brevard Zoo....jpg', alt: 'Robbie at Brevard Zoo' },
