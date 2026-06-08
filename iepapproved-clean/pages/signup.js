@@ -1,24 +1,42 @@
+// pages/signup.js — Updated with auth check
+// If already subscribed → redirect to /ada
+// If logged in but not subscribed → pre-fill email from profile
+
 import Head from 'next/head'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
+import { useAuth } from '../context/AuthContext'
 
 const ADA_UNLIMITED_PRICE_ID = 'price_1TfOauPsMEtDZUDk1o4Vcy1c'
 
 export default function Signup() {
   const router = useRouter()
+  const { user, profile, loading } = useAuth()
   const [email, setEmail] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [checkoutLoading, setCheckoutLoading] = useState(false)
   const [error, setError] = useState(null)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => { setMounted(true) }, [])
+
+  // If already unlimited → redirect to Ada
+  useEffect(() => {
+    if (!loading && profile?.tier === 'unlimited') {
+      router.replace('/ada')
+    }
+  }, [loading, profile])
+
+  // Pre-fill email if logged in
+  useEffect(() => {
+    if (user?.email) setEmail(user.email)
+  }, [user])
 
   const handleCheckout = async () => {
     if (!email || !email.includes('@')) {
       setError('Please enter a valid email address')
       return
     }
-    setLoading(true)
+    setCheckoutLoading(true)
     setError(null)
     try {
       const res = await fetch('/api/create-checkout', {
@@ -31,15 +49,28 @@ export default function Signup() {
         window.location.href = data.url
       } else {
         setError(data.error || 'Something went wrong. Please try again.')
-        setLoading(false)
+        setCheckoutLoading(false)
       }
     } catch (err) {
       setError('Something went wrong. Please try again.')
-      setLoading(false)
+      setCheckoutLoading(false)
     }
   }
 
-  if (!mounted) return null
+  if (!mounted || loading) return null
+
+  // Already unlimited — show redirect message briefly
+  if (profile?.tier === 'unlimited') {
+    return (
+      <div style={{ minHeight: '100vh', background: '#F3F0FA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Outfit, sans-serif' }}>
+        <div style={{ textAlign: 'center', color: '#2D1B4E' }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>✦</div>
+          <p style={{ fontSize: '18px', fontWeight: '700' }}>You already have Ada Unlimited!</p>
+          <p style={{ color: '#7A6E8E', marginTop: '8px' }}>Redirecting you to Ada...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <>
@@ -52,6 +83,12 @@ export default function Signup() {
       <div style={s.page}>
         <nav style={s.nav}>
           <a href="/" style={s.navLogo}>IEP <span style={{color:'#D4A843'}}>Approved</span></a>
+          {/* Show sign in link if not logged in */}
+          {!user && (
+            <a href="/login" style={{ color: '#D4A843', fontSize: '13px', fontWeight: '600', textDecoration: 'none', marginLeft: 'auto' }}>
+              Already have an account? Sign In
+            </a>
+          )}
         </nav>
 
         <div style={s.container}>
@@ -95,28 +132,40 @@ export default function Signup() {
                 <img src="/ada-avatar.png" alt="Ada" style={s.adaImg} />
               </div>
               <h2 style={s.cardTitle}>Start Ada Unlimited</h2>
-              <p style={s.cardSub}>Enter your email to continue to secure checkout</p>
+              <p style={s.cardSub}>
+                {user
+                  ? `Upgrading account for ${user.email}`
+                  : 'Enter your email to continue to secure checkout'}
+              </p>
+
+              {/* If not logged in, show note to create account first */}
+              {!user && (
+                <div style={{ background: 'rgba(212,168,67,0.08)', border: '1px solid rgba(212,168,67,0.3)', borderRadius: '10px', padding: '12px 14px', marginBottom: '16px', fontSize: '13px', color: '#2D1B4E' }}>
+                  💡 <strong>Tip:</strong> <a href="/login?mode=signup" style={{ color: '#2D1B4E', fontWeight: '700' }}>Create a free account first</a> so your subscription links automatically.
+                </div>
+              )}
 
               <div style={s.formGroup}>
                 <label style={s.label}>Email address</label>
                 <input
-                  style={s.input}
+                  style={{...s.input, backgroundColor: user ? '#f5f3ff' : '#F9F8FC'}}
                   type="email"
                   placeholder="you@email.com"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleCheckout()}
+                  readOnly={!!user}
                 />
               </div>
 
               {error && <div style={s.error}>{error}</div>}
 
               <button
-                style={{...s.btn, opacity: loading ? 0.7 : 1}}
+                style={{...s.btn, opacity: checkoutLoading ? 0.7 : 1}}
                 onClick={handleCheckout}
-                disabled={loading}
+                disabled={checkoutLoading}
               >
-                {loading ? 'Redirecting to checkout...' : 'Continue to Checkout →'}
+                {checkoutLoading ? 'Redirecting to checkout...' : 'Continue to Checkout →'}
               </button>
 
               <div style={s.price}>
@@ -181,7 +230,7 @@ const s = {
   cardSub: { fontSize:'13px', color:'#7A6E8E', textAlign:'center', marginBottom:'24px' },
   formGroup: { marginBottom:'16px' },
   label: { display:'block', fontSize:'13px', fontWeight:600, color:'#2D1B4E', marginBottom:'6px' },
-  input: { width:'100%', padding:'12px 14px', border:'1.5px solid #E8E2F5', borderRadius:'10px', fontSize:'14px', fontFamily:'Outfit,sans-serif', color:'#1A1026', background:'#F9F8FC' },
+  input: { width:'100%', padding:'12px 14px', border:'1.5px solid #E8E2F5', borderRadius:'10px', fontSize:'14px', fontFamily:'Outfit,sans-serif', color:'#1A1026' },
   error: { background:'#FEF2F2', border:'1px solid #FECACA', borderRadius:'8px', padding:'10px 14px', fontSize:'13px', color:'#DC2626', marginBottom:'14px' },
   btn: { width:'100%', background:'#2D1B4E', color:'#fff', border:'none', borderRadius:'12px', padding:'15px', fontSize:'15px', fontWeight:700, cursor:'pointer', fontFamily:'Outfit,sans-serif', marginBottom:'16px' },
   price: { textAlign:'center', marginBottom:'8px' },
