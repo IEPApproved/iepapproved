@@ -2,7 +2,7 @@
 // Handles Stripe events: payment → upgrade Supabase tier + send welcome email
 
 import Stripe from 'stripe'
-import { createAdminClient } from '../../lib/supabase'
+import { createAdminClient } from '../../../lib/supabase'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
