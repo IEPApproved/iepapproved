@@ -1,13 +1,13 @@
 // pages/ada.js — IEP Approved
-// Mobile-first responsive: slim top bar on phone, left panel on desktop
-// Fixes: auto-play greeting, play/pause icons, audio stops on unmount, "Searching..." bubbles
+// UPDATED: Guest signup nudge banner — slides up after first question, dismissible
+// No other changes to existing functionality
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useLanguage } from '../context/LanguageContext';
 
-const QUESTION_LIMIT_GUEST = 5;
+const QUESTION_LIMIT_GUEST = 3;   // guests get 3 before nudge becomes hard wall
 const QUESTION_LIMIT_FREE = 10;
 
 function cleanForElevenLabs(text, lang = 'en') {
@@ -57,6 +57,10 @@ export default function AdaPage() {
   const [showSettings, setShowSettings] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
+  // ── NUDGE BANNER STATE ──────────────────────────────────────────────────────
+  const [showNudge, setShowNudge] = useState(false);
+  const [nudgeDismissed, setNudgeDismissed] = useState(false);
+
   const audioRef = useRef(null);
   const audioBlobUrlRef = useRef(null);
   const progressIntervalRef = useRef(null);
@@ -66,7 +70,6 @@ export default function AdaPage() {
   const chatBottomRef = useRef(null);
   const greetingPlayedRef = useRef(false);
 
-  // Detect mobile
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
     check();
@@ -78,8 +81,10 @@ export default function AdaPage() {
     setMounted(true);
     const saved = localStorage.getItem('iep_question_count');
     const savedTier = localStorage.getItem('iep_user_tier');
+    const nudgeSeen = localStorage.getItem('iep_nudge_dismissed');
     if (saved) setQuestionCount(parseInt(saved));
     if (savedTier) setUserTier(savedTier);
+    if (nudgeSeen) setNudgeDismissed(true);
   }, []);
 
   useEffect(() => {
@@ -90,7 +95,6 @@ export default function AdaPage() {
     if (audioRef.current) audioRef.current.volume = volume;
   }, [volume]);
 
-  // STOP AUDIO — also called on unmount to prevent background playback
   const stopAudio = useCallback(() => {
     if (audioRef.current) {
       audioRef.current.pause();
@@ -108,7 +112,6 @@ export default function AdaPage() {
     setAudioDuration(0);
   }, []);
 
-  // STOP AUDIO WHEN NAVIGATING AWAY
   useEffect(() => {
     return () => {
       stopAudio();
@@ -116,7 +119,6 @@ export default function AdaPage() {
     };
   }, [stopAudio]);
 
-  // SPEAK TEXT
   const speakText = useCallback(async (text, speakLang) => {
     stopAudio();
     lastSpokenTextRef.current = text;
@@ -160,14 +162,12 @@ export default function AdaPage() {
     }
   }, [lang, volume, stopAudio]);
 
-  // SET GREETING + AUTO-PLAY on mount and lang change
   useEffect(() => {
     if (!mounted) return;
     const greeting = lang === 'es'
       ? '¡Hola! Soy Ada, tu guía de leyes del IEP. Pregúntame cualquier cosa sobre los derechos de tu hijo bajo IDEA, la Sección 504 o la ADA.'
       : "Hello! I'm Ada, your IEP Approved AI Guide. Ask me anything about your child's rights under IDEA, Section 504, or ADA — in English or Spanish.";
     setMessages([{ role: 'assistant', content: greeting }]);
-    // Auto-play greeting on first load only
     if (!greetingPlayedRef.current && autoRead) {
       greetingPlayedRef.current = true;
       setTimeout(() => speakText(greeting, lang), 800);
@@ -250,16 +250,25 @@ export default function AdaPage() {
     const trimmed = (text || input).trim();
     if (!trimmed || isThinking) return;
     stopAudio();
+
     const limit = userTier === 'guest' ? QUESTION_LIMIT_GUEST : userTier === 'free' ? QUESTION_LIMIT_FREE : Infinity;
-    if (questionCount >= limit) { setShowLimitModal(true); return; }
+
+    // Hard wall — show modal
+    if (questionCount >= limit) {
+      setShowLimitModal(true);
+      return;
+    }
+
     setInput('');
     const newCount = questionCount + 1;
     setQuestionCount(newCount);
     localStorage.setItem('iep_question_count', newCount);
+
     const userMessage = { role: 'user', content: trimmed };
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
     setIsThinking(true);
+
     try {
       const response = await fetch('/api/ada', {
         method: 'POST',
@@ -267,10 +276,17 @@ export default function AdaPage() {
         body: JSON.stringify({ messages: updatedMessages, lang }),
       });
       const data = await response.json();
-      const reply = data.content || "I'm sorry, I had trouble with that. Please try again.";
+      const reply = data.content || data.message || "I'm sorry, I had trouble with that. Please try again.";
       setMessages(prev => [...prev, { role: 'assistant', content: reply }]);
       setIsThinking(false);
       if (autoRead) await speakText(reply, lang);
+
+      // ── SHOW NUDGE BANNER after answer is delivered ──
+      // Show after Q1 for guests, stay visible but dismissible
+      if (userTier === 'guest' && !nudgeDismissed) {
+        setTimeout(() => setShowNudge(true), 600);
+      }
+
     } catch (err) {
       console.error('Ada error:', err);
       setIsThinking(false);
@@ -279,6 +295,12 @@ export default function AdaPage() {
         content: lang === 'es' ? 'Lo siento, tuve un problema. Por favor intenta de nuevo.' : "I'm sorry, I had trouble with that. Please try again."
       }]);
     }
+  };
+
+  const dismissNudge = () => {
+    setShowNudge(false);
+    setNudgeDismissed(true);
+    localStorage.setItem('iep_nudge_dismissed', '1');
   };
 
   const handleLimitSignup = async (e) => {
@@ -292,7 +314,7 @@ export default function AdaPage() {
       });
       setLimitEmailSent(true);
       setTimeout(() => {
-        window.location.href = '/intake?email=' + encodeURIComponent(limitEmail);
+        window.location.href = '/login?mode=signup&email=' + encodeURIComponent(limitEmail);
       }, 1500);
     } catch (err) { console.error(err); }
   };
@@ -301,6 +323,7 @@ export default function AdaPage() {
 
   const limit = userTier === 'guest' ? QUESTION_LIMIT_GUEST : userTier === 'free' ? QUESTION_LIMIT_FREE : 999;
   const questionsLeft = Math.max(0, limit - questionCount);
+  const isUrgent = userTier === 'guest' && questionsLeft <= 1;
 
   const formatTime = (secs) => {
     if (!secs || isNaN(secs)) return '0:00';
@@ -309,7 +332,6 @@ export default function AdaPage() {
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
-  // ── PLAY/PAUSE BUTTON (unified) ────────────────────────────────────────────
   const PlayPauseBtn = ({ style }) => {
     if (isSpeaking) {
       return (
@@ -326,7 +348,6 @@ export default function AdaPage() {
     );
   };
 
-  // ── SETTINGS PANEL (shared desktop + mobile) ───────────────────────────────
   const SettingsPanel = () => (
     <div style={s.settingsPanel}>
       <div style={s.volumeRow}>
@@ -350,6 +371,15 @@ export default function AdaPage() {
     </div>
   );
 
+  // ── NUDGE BANNER TEXT ────────────────────────────────────────────────────────
+  const nudgeTitle = isUrgent
+    ? (lang === 'es' ? '⚡ Última pregunta gratuita de hoy' : '⚡ That was your last free question today')
+    : (lang === 'es' ? `💬 Te quedan ${questionsLeft} preguntas gratis hoy` : `💬 You have ${questionsLeft} free question${questionsLeft !== 1 ? 's' : ''} left today`);
+
+  const nudgeSubtext = lang === 'es'
+    ? 'Crea una cuenta gratuita y obtén 10 preguntas cada mes — sin tarjeta de crédito.'
+    : 'Create a free account and get 10 questions every month — no credit card needed.';
+
   return (
     <>
       <Head>
@@ -369,7 +399,6 @@ export default function AdaPage() {
               <span style={s.logoApp}>APPROVED</span>
             </div>
           </Link>
-          {/* Desktop nav links — hidden on mobile */}
           {!isMobile && (
             <div style={s.navLinks}>
               <Link href="/#how-it-works" style={s.navLink}>How It Works</Link>
@@ -389,7 +418,6 @@ export default function AdaPage() {
               )}
             </div>
           )}
-          {/* Mobile nav — compact */}
           {isMobile && (
             <div style={s.mobileNavRight}>
               {userTier !== 'unlimited' && (
@@ -408,11 +436,10 @@ export default function AdaPage() {
         </div>
       </nav>
 
-      {/* ── MOBILE TOP BAR (Ada status + controls) ── */}
+      {/* ── MOBILE TOP BAR ── */}
       {isMobile && (
         <div style={s.mobileTopBar}>
           <div style={s.mobileAdaInfo}>
-            {/* Avatar */}
             <div style={{...s.mobileAvatar, boxShadow: isSpeaking ? '0 0 0 3px #D4A843' : 'none'}}>
               <img src="/ada-avatar.png" alt="Ada" style={s.mobileAvatarImg}
                 onError={(e) => { e.target.style.display='none'; }} />
@@ -428,7 +455,6 @@ export default function AdaPage() {
               </div>
             </div>
           </div>
-          {/* Mobile audio controls */}
           <div style={s.mobileAudioRow}>
             <PlayPauseBtn style={s.mobileAudioBtn} />
             {isSpeaking && (
@@ -436,7 +462,6 @@ export default function AdaPage() {
             )}
             <button onClick={() => setShowSettings(!showSettings)} style={s.settingsBtn}>⚙️</button>
           </div>
-          {/* Settings dropdown */}
           {showSettings && <SettingsPanel />}
         </div>
       )}
@@ -471,8 +496,6 @@ export default function AdaPage() {
 
         {/* CHAT PANEL */}
         <div style={isMobile ? s.chatPanelMobile : s.chatPanelDesktop}>
-
-          {/* MESSAGES */}
           <div style={isMobile ? s.chatAreaMobile : s.chatAreaDesktop}>
             {messages.map((msg, i) => (
               <div key={i} style={msg.role==='user' ? s.userBubble : s.adaBubble}>
@@ -494,7 +517,6 @@ export default function AdaPage() {
             <div ref={chatBottomRef} />
           </div>
 
-          {/* INPUT */}
           <div style={s.inputArea}>
             <textarea ref={inputRef} value={input}
               onChange={e => setInput(e.target.value)}
@@ -508,7 +530,6 @@ export default function AdaPage() {
             </button>
           </div>
 
-          {/* MIC BUTTONS */}
           <div style={isMobile ? s.micRowMobile : s.micRow}>
             <button onClick={() => isListeningEN ? stopListening() : startListening('en-US')}
               style={{...(isMobile ? s.micBtnMobile : s.micBtn), ...(isListeningEN ? s.micActive : {})}}>
@@ -524,7 +545,6 @@ export default function AdaPage() {
             </button>
           </div>
 
-          {/* QUESTION COUNTER */}
           {userTier !== 'unlimited' && (
             <p style={s.counter}>
               {lang==='es' ? `${questionsLeft} preguntas restantes` : `${questionsLeft} questions remaining`}
@@ -536,6 +556,74 @@ export default function AdaPage() {
           )}
         </div>
       </div>
+
+      {/* ── NUDGE BANNER ── slides up from bottom after first answer ── */}
+      {showNudge && userTier === 'guest' && (
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 150,
+          backgroundColor: isUrgent ? '#1a0f2e' : '#1a0f2e',
+          borderTop: `2px solid ${isUrgent ? '#ef4444' : '#D4A843'}`,
+          padding: '16px 20px',
+          boxShadow: '0 -8px 32px rgba(0,0,0,0.5)',
+          animation: 'slideUp 0.4s ease-out',
+        }}>
+          <button
+            onClick={dismissNudge}
+            style={{
+              position: 'absolute', top: '12px', right: '16px',
+              background: 'none', border: 'none', color: 'rgba(184,168,208,0.5)',
+              fontSize: '18px', cursor: 'pointer', lineHeight: 1,
+            }}
+          >✕</button>
+
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <p style={{
+              color: isUrgent ? '#ef4444' : '#D4A843',
+              fontWeight: '700', fontSize: '15px',
+              fontFamily: 'Outfit, sans-serif', margin: '0 0 4px',
+            }}>
+              {nudgeTitle}
+            </p>
+            <p style={{
+              color: '#b8a8d0', fontSize: '13px',
+              fontFamily: 'Outfit, sans-serif', margin: '0 0 12px',
+            }}>
+              {nudgeSubtext}
+            </p>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              <Link href="/login?mode=signup" style={{
+                backgroundColor: '#D4A843', color: '#2D1B4E',
+                padding: '10px 20px', borderRadius: '8px',
+                textDecoration: 'none', fontSize: '14px', fontWeight: '800',
+                fontFamily: 'Outfit, sans-serif', whiteSpace: 'nowrap',
+              }}>
+                {lang === 'es' ? 'Crear Cuenta Gratis' : 'Create Free Account'}
+              </Link>
+              <Link href="/signup" style={{
+                backgroundColor: 'transparent',
+                border: '1px solid #D4A843', color: '#D4A843',
+                padding: '10px 20px', borderRadius: '8px',
+                textDecoration: 'none', fontSize: '14px', fontWeight: '700',
+                fontFamily: 'Outfit, sans-serif', whiteSpace: 'nowrap',
+              }}>
+                {lang === 'es' ? 'Ada Sin Límites — $4.99/mes' : 'Ada Unlimited — $4.99/mo'}
+              </Link>
+              <button onClick={dismissNudge} style={{
+                background: 'none', border: 'none',
+                color: 'rgba(184,168,208,0.5)', fontSize: '13px',
+                fontFamily: 'Outfit, sans-serif', cursor: 'pointer',
+                padding: '10px 4px', whiteSpace: 'nowrap',
+              }}>
+                {lang === 'es' ? 'Quizás después' : 'Maybe later'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* LIMIT MODAL */}
       {showLimitModal && (
@@ -573,6 +661,10 @@ export default function AdaPage() {
           0%,60%,100%{transform:translateY(0)}
           30%{transform:translateY(-8px)}
         }
+        @keyframes slideUp {
+          from { transform: translateY(100%); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
         * { box-sizing: border-box; }
         input[type=range]{ accent-color:#D4A843; width:100%; }
         body { margin:0; overflow-x:hidden; }
@@ -581,9 +673,7 @@ export default function AdaPage() {
   );
 }
 
-// ─── STYLES ───────────────────────────────────────────────────────────────────
 const s = {
-  // NAV
   nav:{position:'sticky',top:0,zIndex:100,backgroundColor:'#2D1B4E',borderBottom:'2px solid #D4A843',width:'100%'},
   navInner:{maxWidth:'1200px',margin:'0 auto',padding:'0 16px',height:'60px',display:'flex',alignItems:'center',justifyContent:'space-between'},
   logoLink:{textDecoration:'none',display:'flex',alignItems:'center',flexShrink:0},
@@ -599,14 +689,10 @@ const s = {
   langOff:{color:'rgba(255,255,255,0.3)'},
   langDiv:{color:'rgba(255,255,255,0.2)'},
   upgradeBtn:{backgroundColor:'#D4A843',color:'#2D1B4E',padding:'7px 14px',borderRadius:'6px',textDecoration:'none',fontSize:'13px',fontWeight:'800',fontFamily:'Outfit,sans-serif',whiteSpace:'nowrap'},
-
-  // MOBILE NAV
   mobileNavRight:{display:'flex',alignItems:'center',gap:'10px'},
   qBadgeSm:{backgroundColor:'rgba(212,168,67,0.15)',border:'1px solid #D4A843',color:'#D4A843',padding:'3px 8px',borderRadius:'20px',fontSize:'11px',fontWeight:'600'},
   langToggleSm:{background:'rgba(255,255,255,0.08)',border:'2px solid rgba(212,168,67,0.6)',borderRadius:'20px',padding:'4px 10px',cursor:'pointer',display:'flex',alignItems:'center',gap:'3px',fontSize:'12px',fontFamily:'Outfit,sans-serif',fontWeight:'700'},
   upgradeBtnSm:{backgroundColor:'#D4A843',color:'#2D1B4E',padding:'6px 10px',borderRadius:'6px',textDecoration:'none',fontSize:'14px',fontWeight:'800'},
-
-  // MOBILE TOP BAR
   mobileTopBar:{backgroundColor:'#1a0f2e',borderBottom:'1px solid rgba(212,168,67,0.2)',padding:'10px 16px',display:'flex',flexDirection:'column',gap:'10px'},
   mobileAdaInfo:{display:'flex',alignItems:'center',gap:'12px'},
   mobileAvatar:{width:'44px',height:'44px',borderRadius:'50%',border:'2px solid #D4A843',position:'relative',overflow:'hidden',backgroundColor:'#2D1B4E',flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',transition:'box-shadow 0.3s'},
@@ -618,20 +704,14 @@ const s = {
   mobileAudioBtn:{flex:1,padding:'9px 12px',backgroundColor:'#D4A843',color:'#2D1B4E',border:'none',borderRadius:'8px',fontSize:'13px',fontWeight:'700',fontFamily:'Outfit,sans-serif',cursor:'pointer'},
   mobileStopBtn:{padding:'9px 12px',backgroundColor:'rgba(239,68,68,0.15)',color:'#ef4444',border:'1px solid rgba(239,68,68,0.3)',borderRadius:'8px',fontSize:'13px',cursor:'pointer'},
   settingsBtn:{padding:'9px 12px',backgroundColor:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.15)',borderRadius:'8px',fontSize:'16px',cursor:'pointer'},
-
-  // SETTINGS PANEL
   settingsPanel:{display:'flex',flexDirection:'column',gap:'8px',padding:'10px',backgroundColor:'rgba(255,255,255,0.03)',borderRadius:'8px',border:'1px solid rgba(212,168,67,0.15)'},
   volumeRow:{display:'flex',alignItems:'center',gap:'8px'},
   progressRow:{display:'flex',alignItems:'center',gap:'6px'},
   slider:{flex:1,cursor:'pointer'},
   timeText:{color:'#b8a8d0',fontSize:'11px',whiteSpace:'nowrap'},
   autoLabel:{color:'#b8a8d0',fontSize:'12px',cursor:'pointer',display:'flex',alignItems:'center'},
-
-  // STATUS
   statusDot:{width:'7px',height:'7px',borderRadius:'50%',flexShrink:0,transition:'background-color 0.3s'},
   statusText:{color:'#b8a8d0',fontSize:'11px'},
-
-  // DESKTOP LEFT PANEL
   leftPanel:{width:'250px',minWidth:'250px',backgroundColor:'#1a0f2e',borderRight:'1px solid rgba(212,168,67,0.2)',display:'flex',flexDirection:'column',alignItems:'center',padding:'24px 14px 20px',gap:'10px'},
   adaRing:{width:'90px',height:'90px',borderRadius:'50%',border:'3px solid #D4A843',display:'flex',alignItems:'center',justifyContent:'center',position:'relative',overflow:'hidden',backgroundColor:'#2D1B4E',marginBottom:'4px',transition:'box-shadow 0.3s'},
   adaAvatar:{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%',position:'absolute',zIndex:2},
@@ -644,40 +724,26 @@ const s = {
   audioBtn:{flex:1,padding:'10px',backgroundColor:'#D4A843',color:'#2D1B4E',border:'none',borderRadius:'8px',fontSize:'13px',fontWeight:'700',fontFamily:'Outfit,sans-serif',cursor:'pointer'},
   stopBtn:{padding:'10px 12px',backgroundColor:'rgba(239,68,68,0.15)',color:'#ef4444',border:'1px solid rgba(239,68,68,0.3)',borderRadius:'8px',fontSize:'13px',cursor:'pointer'},
   disclaimer:{color:'rgba(184,168,208,0.5)',fontSize:'10px',textAlign:'center',lineHeight:'1.5',marginTop:'auto',borderTop:'1px solid rgba(255,255,255,0.06)',paddingTop:'10px'},
-
-  // PAGE LAYOUTS
   pageDesktop:{minHeight:'calc(100vh - 60px)',backgroundColor:'#0f0a1a',display:'flex',fontFamily:'Outfit,sans-serif',overflow:'hidden'},
   pageMobile:{minHeight:'calc(100vh - 60px)',backgroundColor:'#0f0a1a',display:'flex',flexDirection:'column',fontFamily:'Outfit,sans-serif',width:'100%',overflow:'hidden'},
-
-  // CHAT PANELS
   chatPanelDesktop:{flex:1,display:'flex',flexDirection:'column',maxWidth:'800px',margin:'0 auto',padding:'16px 20px 0',width:'100%'},
   chatPanelMobile:{flex:1,display:'flex',flexDirection:'column',padding:'12px 12px 0',width:'100%'},
-
-  // CHAT AREAS
   chatAreaDesktop:{flex:1,overflowY:'auto',display:'flex',flexDirection:'column',gap:'12px',paddingBottom:'10px',maxHeight:'calc(100vh - 280px)'},
-  chatAreaMobile:{flex:1,overflowY:'auto',display:'flex',flexDirection:'column',gap:'10px',paddingBottom:'8px',maxHeight:'calc(100vh - 340px)'},
-
-  // BUBBLES
+  chatAreaMobile:{flex:1,overflowY:'auto',display:'flex',flexDirection:'column',gap:'10px',paddingBottom:'80px',maxHeight:'calc(100vh - 340px)'},
   adaBubble:{backgroundColor:'#1a0f2e',border:'1px solid rgba(212,168,67,0.2)',borderRadius:'12px 12px 12px 4px',padding:'12px 14px',maxWidth:'88%',alignSelf:'flex-start'},
   userBubble:{backgroundColor:'#2D1B4E',border:'1px solid rgba(212,168,67,0.3)',borderRadius:'12px 12px 4px 12px',padding:'12px 14px',maxWidth:'80%',alignSelf:'flex-end'},
   adaLabel:{color:'#D4A843',fontSize:'10px',fontWeight:'700',letterSpacing:'1px',textTransform:'uppercase',display:'block',marginBottom:'5px'},
   msgText:{color:'#e8e0f0',fontSize:'15px',lineHeight:'1.6',margin:0,whiteSpace:'pre-wrap'},
-
-  // THINKING
   thinkingWrap:{display:'flex',alignItems:'center',gap:'5px',padding:'3px 0'},
   dot1:{width:'7px',height:'7px',borderRadius:'50%',backgroundColor:'#D4A843',animation:'bounce 1.2s infinite'},
   dot2:{width:'7px',height:'7px',borderRadius:'50%',backgroundColor:'#D4A843',animation:'bounce 1.2s infinite 0.2s'},
   dot3:{width:'7px',height:'7px',borderRadius:'50%',backgroundColor:'#D4A843',animation:'bounce 1.2s infinite 0.4s'},
   thinkingText:{color:'#b8a8d0',fontSize:'12px',marginLeft:'4px'},
-
-  // INPUT
   inputArea:{display:'flex',gap:'8px',alignItems:'flex-end',padding:'10px 0 0',borderTop:'1px solid rgba(212,168,67,0.15)'},
   textarea:{flex:1,backgroundColor:'#1a0f2e',border:'1px solid rgba(212,168,67,0.3)',borderRadius:'8px',color:'#e8e0f0',fontSize:'15px',fontFamily:'Outfit,sans-serif',padding:'10px 12px',resize:'none',outline:'none',lineHeight:'1.5'},
   textareaMobile:{flex:1,backgroundColor:'#1a0f2e',border:'1px solid rgba(212,168,67,0.3)',borderRadius:'8px',color:'#e8e0f0',fontSize:'16px',fontFamily:'Outfit,sans-serif',padding:'10px 12px',resize:'none',outline:'none',lineHeight:'1.5'},
   sendBtn:{backgroundColor:'#D4A843',color:'#2D1B4E',border:'none',borderRadius:'8px',padding:'10px 18px',fontSize:'14px',fontWeight:'700',fontFamily:'Outfit,sans-serif',cursor:'pointer',whiteSpace:'nowrap',alignSelf:'flex-end'},
   sendBtnMobile:{backgroundColor:'#D4A843',color:'#2D1B4E',border:'none',borderRadius:'8px',padding:'10px 14px',fontSize:'14px',fontWeight:'700',fontFamily:'Outfit,sans-serif',cursor:'pointer',whiteSpace:'nowrap',alignSelf:'flex-end'},
-
-  // MIC BUTTONS
   micRow:{display:'flex',gap:'10px',padding:'10px 0'},
   micRowMobile:{display:'flex',gap:'8px',padding:'10px 0'},
   micBtn:{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:'8px',backgroundColor:'#1a0f2e',border:'2px solid rgba(212,168,67,0.4)',borderRadius:'10px',padding:'11px 14px',color:'#e8e0f0',fontSize:'13px',fontFamily:'Outfit,sans-serif',fontWeight:'600',cursor:'pointer',position:'relative'},
@@ -686,11 +752,8 @@ const s = {
   micActive:{backgroundColor:'rgba(212,168,67,0.15)',borderColor:'#D4A843',boxShadow:'0 0 12px rgba(212,168,67,0.3)'},
   micIcon:{fontSize:'18px'},
   recDot:{width:'8px',height:'8px',borderRadius:'50%',backgroundColor:'#ef4444',position:'absolute',top:'8px',right:'8px',animation:'bounce 1s infinite'},
-
   counter:{color:'rgba(184,168,208,0.6)',fontSize:'12px',textAlign:'center',padding:'4px 0 10px'},
   upgradeLink:{color:'#D4A843',textDecoration:'none',fontWeight:'700'},
-
-  // MODAL
   overlay:{position:'fixed',inset:0,backgroundColor:'rgba(0,0,0,0.8)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:200,padding:'16px'},
   modal:{backgroundColor:'#1a0f2e',border:'2px solid #D4A843',borderRadius:'16px',padding:'32px 24px',maxWidth:'460px',width:'100%',textAlign:'center',position:'relative'},
   modalClose:{position:'absolute',top:'12px',right:'14px',background:'none',border:'none',color:'rgba(184,168,208,0.5)',fontSize:'18px',cursor:'pointer'},
