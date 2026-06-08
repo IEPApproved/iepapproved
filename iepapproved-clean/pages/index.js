@@ -1,5 +1,6 @@
 // pages/index.js — IEP Approved Complete Homepage
 // Final copy locked June 2026
+// UPDATED: Start Free → /login?mode=signup, Ask Ada Free → /login?mode=signup, email success → /login?mode=signup
 
 import Head from 'next/head';
 import Link from 'next/link';
@@ -109,13 +110,13 @@ export default function HomePage() {
   ];
 
   const robbiePhotos = [
-  { src: '/Robbie Baseball.jpg', alt: 'Robbie Baseball' },
-  { src: '/Robbie Birthday.jpg', alt: "Robbie's Birthday" },
-  { src: '/Robbie Boat.jpg', alt: 'Robbie on the Boat' },
-  { src: '/Robbie Brevard Zoo.jpg', alt: 'Robbie at Brevard Zoo' },
-  { src: '/Robbie Marthon Key.jpg', alt: 'Robbie at Marathon Key' },
-  { src: '/kim-and-robbie.jpeg', alt: 'Kimberly and Robbie' },
-];
+    { src: '/Robbie Baseball.jpg', alt: 'Robbie Baseball' },
+    { src: '/Robbie Birthday.jpg', alt: "Robbie's Birthday" },
+    { src: '/Robbie Boat.jpg', alt: 'Robbie on the Boat' },
+    { src: '/Robbie Brevard Zoo.jpg', alt: 'Robbie at Brevard Zoo' },
+    { src: '/Robbie Marthon Key.jpg', alt: 'Robbie at Marathon Key' },
+    { src: '/kim-and-robbie.jpeg', alt: 'Kimberly and Robbie' },
+  ];
 
   return (
     <>
@@ -144,7 +145,8 @@ export default function HomePage() {
               }
             </p>
             <div style={s.heroBtns}>
-              <Link href="/ada" style={s.heroPrimary}>{es ? 'Pregunta a Ada Gratis' : 'Ask Ada Free'}</Link>
+              {/* CHANGE 1: was /ada */}
+              <Link href="/login?mode=signup" style={s.heroPrimary}>{es ? 'Pregunta a Ada Gratis' : 'Ask Ada Free'}</Link>
               <Link href="#support" style={s.heroSecondary}>{es ? 'Ver Cómo Te Apoyamos' : 'See How We Support You'}</Link>
             </div>
           </div>
@@ -261,7 +263,8 @@ export default function HomePage() {
               <p style={s.pricingPrice}>$0</p>
               <p style={s.pricingPriceSub}>{es ? 'siempre gratis para comenzar' : 'always free to start'}</p>
               <p style={s.pricingDesc}>{es ? 'Hazle 5 preguntas a Ada hoy, sin necesidad de registrarte. Únete a nuestra comunidad y haz hasta 10 preguntas al mes de forma gratuita.' : 'Ask Ada 5 questions today, no signup needed. Join our community and ask up to 10 questions per month — free.'}</p>
-              <Link href="/ada" style={s.pricingBtnOutline}>{es ? 'Comenzar Gratis' : 'Start Free'}</Link>
+              {/* CHANGE 2: was /ada */}
+              <Link href="/login?mode=signup" style={s.pricingBtnOutline}>{es ? 'Comenzar Gratis' : 'Start Free'}</Link>
             </div>
             {/* ADA UNLIMITED */}
             <div style={s.pricingCardGold}>
@@ -299,7 +302,6 @@ export default function HomePage() {
         <div style={s.storyInner}>
           <p style={s.eyebrowDark}>{es ? 'NUESTRA HISTORIA' : 'OUR STORY'}</p>
           <h2 style={s.storySectionTitle}>{es ? 'Construido por una mamá. Para cada familia.' : 'Built by a mom. For every family.'}</h2>
-
           <div style={s.photoGallery}>
             {robbiePhotos.map((photo, i) => (
               <div key={i} style={s.photoWrap}>
@@ -307,7 +309,6 @@ export default function HomePage() {
               </div>
             ))}
           </div>
-
           <div style={s.storyLayout}>
             <div style={s.storyText}>
               <p style={s.storyPara}>{es ? 'La pregunta que más se le hace a los padres de niños con necesidades especiales es: ¿lo sabías?' : 'The question most special needs parents get asked is: did you know?'}</p>
@@ -354,7 +355,8 @@ export default function HomePage() {
           ) : (
             <div style={s.emailSuccess}>
               <p style={s.emailSuccessText}>{es ? 'Bienvenido. Revisa tu bandeja de entrada.' : 'Welcome. Check your inbox.'}</p>
-              <Link href="/intake" style={s.emailCreateAccount}>{es ? 'Crear tu cuenta gratuita →' : 'Create your free account →'}</Link>
+              {/* CHANGE 3: was /intake */}
+              <Link href="/login?mode=signup" style={s.emailCreateAccount}>{es ? 'Crear tu cuenta gratuita →' : 'Create your free account →'}</Link>
             </div>
           )}
           <p style={s.emailFine}>{es ? 'Sin spam. Cancela cuando quieras. Tu privacidad está protegida.' : 'No spam. Unsubscribe anytime. Your privacy is protected.'}</p>
@@ -488,12 +490,12 @@ const s = {
   storyText:{display:'flex',flexDirection:'column',gap:'16px'},
   storyPara:{color:'#374151',fontSize:'16px',lineHeight:'1.8',fontFamily:'Outfit,sans-serif',margin:0},
   storyQuote:{borderLeft:'4px solid #D4A843',paddingLeft:'20px',margin:'8px 0',color:'#2D1B4E',fontSize:'16px',fontStyle:'italic',lineHeight:'1.8',fontFamily:'Cormorant Garamond,serif'},
-closingQuoteWrap:{padding:'16px 0 0',borderTop:'3px solid #D4A843',marginTop:'8px'},
-closingQuoteLine:{display:'none'},
-closingQuote:{color:'#2D1B4E',fontSize:'18px',lineHeight:'1.8',fontFamily:'Cormorant Garamond,serif',fontStyle:'italic',margin:'0 0 20px'},
+  closingQuoteWrap:{padding:'16px 0 0',borderTop:'3px solid #D4A843',marginTop:'8px'},
+  closingQuoteLine:{display:'none'},
+  closingQuote:{color:'#2D1B4E',fontSize:'18px',lineHeight:'1.8',fontFamily:'Cormorant Garamond,serif',fontStyle:'italic',margin:'0 0 20px'},
   closingAuthor:{display:'flex',alignItems:'center',gap:'12px'},
   closingAvatar:{width:'44px',height:'44px',borderRadius:'50%',backgroundColor:'#D4A843',color:'#2D1B4E',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'18px',fontWeight:'800',fontFamily:'Cormorant Garamond,serif',flexShrink:0},
- closingName:{color:'#2D1B4E',fontSize:'15px',fontWeight:'700',fontFamily:'Outfit,sans-serif',margin:'0 0 2px'},
+  closingName:{color:'#2D1B4E',fontSize:'15px',fontWeight:'700',fontFamily:'Outfit,sans-serif',margin:'0 0 2px'},
   closingTitle:{color:'#b8a8d0',fontSize:'12px',fontFamily:'Outfit,sans-serif',margin:0},
   emailSection:{backgroundColor:'#2D1B4E',padding:'80px 0'},
   emailInner:{maxWidth:'640px',margin:'0 auto',padding:'0 24px',textAlign:'center'},
