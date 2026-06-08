@@ -1,339 +1,850 @@
-import Head from 'next/head'
-import { useState } from 'react'
-import styles from '../styles/Home.module.css'
+// pages/index.js — IEP Approved Complete Homepage Overhaul
+// All decisions finalized June 2026
 
-export default function Home() {
-  const [heroInput, setHeroInput] = useState('')
+import Head from 'next/head';
+import Link from 'next/link';
+import { useState, useEffect, useRef } from 'react';
+import Nav from '../components/Nav';
+import { useLanguage } from '../context/LanguageContext';
+
+export default function HomePage() {
+  const { lang } = useLanguage();
+  const [email, setEmail] = useState('');
+  const [emailSubmitted, setEmailSubmitted] = useState(false);
+  const [flippedCard, setFlippedCard] = useState(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
+
+  const handleEmailSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await fetch('/api/email-signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, source: 'homepage' }),
+      });
+      setEmailSubmitted(true);
+    } catch (err) { console.error(err); }
+  };
+
+  if (!mounted) return null;
+
+  const es = lang === 'es';
+
+  // ── CARD DATA ──────────────────────────────────────────────────────────────
+  const cards = [
+    {
+      id: 1,
+      front: {
+        number: '01',
+        title: es ? 'Pregúntale a Ada Lo Que Sea' : 'Ask Ada Anything',
+        desc: es
+          ? 'Escribe o habla tu pregunta. Ada responde con citas de la ley federal en lenguaje claro y sencillo.'
+          : 'Type or speak your question. Ada answers with real federal law citations — in plain language you can actually use.',
+      },
+      back: {
+        visual: 'chat',
+        cta: es ? 'Habla con Ada' : 'Ask Ada Now',
+        link: '/ada',
+      },
+    },
+    {
+      id: 2,
+      front: {
+        number: '02',
+        title: es ? 'Eliminamos la Confusión del Derecho Federal' : 'Taking the Confusion Out of Federal Law',
+        desc: es
+          ? 'Ada cita IDEA, la Sección 504 y la ADA directamente — y luego te lo explica en palabras que tienen sentido para tu familia.'
+          : 'Ada cites IDEA, Section 504, and ADA directly — then explains it in words that make sense for your family. Real law. No jargon.',
+      },
+      back: {
+        visual: 'law',
+        cta: es ? 'Ver Cómo Funciona' : 'See It in Action',
+        link: '/ada',
+      },
+    },
+    {
+      id: 3,
+      front: {
+        number: '03',
+        title: es ? 'Tu Voz. Su Futuro. Aprobado.' : 'Your Voice. Their Future. Approved.',
+        desc: es
+          ? 'Prepara cartas, entiende tus opciones y conoce la diferencia entre sí y no — antes de entrar a esa sala.'
+          : 'Prepare letters, understand your options, and know the difference between yes and no — before you walk into that room.',
+      },
+      back: {
+        visual: 'advocate',
+        cta: es ? 'Comenzar a Prepararse' : 'Start Preparing',
+        link: '/ada',
+      },
+    },
+  ];
+
+  // ── FEATURE TILES ──────────────────────────────────────────────────────────
+  const features = [
+    {
+      title: es ? 'Cita la Ley Exacta' : 'Cites the Exact Law',
+      desc: es
+        ? 'Cada respuesta hace referencia al estatuto federal específico — para que sepas exactamente dónde está la ley.'
+        : 'Every answer references the specific federal statute — so you know exactly where the law stands.',
+    },
+    {
+      title: es ? 'Solo Pregunta — Ada Entiende' : 'Just Ask — Ada Understands',
+      desc: es
+        ? 'Escribe tu pregunta como le preguntarías a un amigo de confianza. Ada encontrará las respuestas que necesitas.'
+        : 'Type your question the way you\'d ask a trusted friend. Ada will find the answers and resources you need.',
+    },
+    {
+      title: es ? 'Honesta Sobre Sus Límites' : 'Honest About Her Limits',
+      desc: es
+        ? 'Cuando necesitas un abogado real, Ada te lo dirá. Sin falsa confianza.'
+        : 'When you need a real attorney, Ada will tell you. No false confidence.',
+    },
+    {
+      title: es ? '¿Hablas Español? Ada También.' : '¿Hablas Español? Ada también.',
+      desc: es
+        ? 'Puedes escribirle a Ada en español — ella te responderá en español con la información que necesitas.'
+        : 'You can write to Ada in Spanish — she will respond in Spanish with the information you need.',
+    },
+    {
+      title: es ? 'Ada No es Abogada' : 'Ada Is Not an Attorney',
+      desc: es
+        ? 'IEP Approved no proporciona servicios legales ni asesoramiento legal. Ada es una IA intuitiva que te proporciona la ley real en lenguaje claro — y te dirá cuándo necesitas un abogado.'
+        : 'IEP Approved does not provide legal services or legal advice. Ada is an intuitive AI that provides real law in clear plain language — and will tell you when you need an attorney.',
+    },
+  ];
+
+  // ── PRICING FEATURES ───────────────────────────────────────────────────────
+  const unlimitedFeatures = es ? [
+    'Preguntas ilimitadas a Ada',
+    'English y Español',
+    'Ley federal: IDEA, ADA, Sección 504',
+    'Estatutos y recursos específicos por estado',
+    'Alertas y recordatorios de cambios en la ley',
+    'Ada lee las respuestas en voz alta',
+    'Entrada de voz en inglés y español',
+    'Acceso a la comunidad — grupos por estado y diagnóstico',
+    'Búsqueda de eventos y recursos locales',
+  ] : [
+    'Unlimited questions to Ada',
+    'English and Español',
+    'Federal law: IDEA, ADA, Section 504',
+    'State-specific statutes and resources',
+    'Law change alerts and reminders',
+    'Ada reads answers aloud',
+    'Voice input English and Español',
+    'Community access — groups by state and diagnosis',
+    'Search local events and community resources',
+  ];
+
+  const resourceItems = es ? [
+    'Listas de verificación de reuniones del IEP',
+    'Plantillas de cartas (rellena el espacio en blanco)',
+    'Guía de términos del IEP',
+    'Guía de la Ley Federal en Lenguaje Sencillo',
+    'Libros para colorear y cuentos de Robbie',
+    'Paquetes de guías en PDF',
+  ] : [
+    'IEP Meeting Preparation Checklists',
+    'Letter Templates (fill in the blank)',
+    'IEP Terminology Guide',
+    'Federal Law Plain Language Guide',
+    'Robbie\'s Coloring Books and Story Books',
+    'PDF Guide Bundles',
+  ];
+
+  // ── ROBBIE PHOTOS ──────────────────────────────────────────────────────────
+  const robbiePhotos = [
+    { src: '/Robbie Baseball.jpg', alt: 'Robbie at Baseball' },
+    { src: '/Robbie Birthday.jpg', alt: 'Robbie\'s Birthday' },
+    { src: '/Robbie Boat.jpg', alt: 'Robbie on the Boat' },
+    { src: '/Robbie Brevard Zoo....jpg', alt: 'Robbie at Brevard Zoo' },
+    { src: '/Robbie Marthon Key....jpg', alt: 'Robbie at Marathon Key' },
+    { src: '/Robbie St. Augustin....jpg', alt: 'Robbie in St. Augustine' },
+  ];
 
   return (
     <>
       <Head>
-        <title>IEP Approved — Know Your Child&apos;s Rights</title>
-        <meta name="description" content="Ada is your AI-powered guide to IEP law, IDEA, and ADA. Ask any question about your child's education rights and get a real answer — with the law to back it up." />
+        <title>IEP Approved — Know the Law. Advocate with Confidence.</title>
+        <meta name="description" content="Ada is your AI-powered guide to the IEP process, IDEA, ADA, and Section 504. Free to start. Bilingual. Built for every family." />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.ico" />
-        <meta property="og:title" content="IEP Approved — Know Your Child's Rights" />
-        <meta property="og:description" content="Ada is your AI-powered guide to IEP law, IDEA, and ADA." />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://iepapproved.com" />
       </Head>
 
-      <nav className={styles.nav}>
-        <a href="/" className={styles.navLogo}>
-          <img src="/IEP_Approved_FINAL_logo.png" alt="IEP Approved" style={{height:'42px', width:'auto'}} />
-        </a>
-        <ul className={styles.navLinks}>
-          <li><a href="#how-it-works">How It Works</a></li>
-          <li><a href="#ada">Ask Ada</a></li>
-          <li><a href="#pricing">Find Your Support</a></li>
-          <li><a href="#about">Our Story</a></li>
-          <li><a href="/contact">Contact Us</a></li>
-          <li><a href="/ada" className={styles.navCta}>Try Ada Free →</a></li>
-        </ul>
-      </nav>
+      <Nav />
 
-      <section className={styles.hero}>
-        <div className={styles.heroInner}>
-          <div className={styles.heroLeft}>
-            <div className={styles.heroEyebrow}>✦ For special needs families</div>
-            <h1 className={styles.heroHeadline}>
-              Every parent deserves to know their child&apos;s <em>rights.</em>
-            </h1>
-            <p className={styles.heroSub}>
-              Ada is your AI-powered guide to IEP law, IDEA, and ADA. Ask any question about your child&apos;s education rights and get a real answer — with the law to back it up.
-            </p>
-            <div className={styles.heroActions}>
-              <a href="/ada" className={styles.btnPrimary}>Ask Ada Free →</a>
-              <a href="#how-it-works" className={styles.btnGhost}>See How It Works</a>
+      {/* ══════════════════════════════════════════════════════════════════════
+          HERO SECTION
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section style={s.hero}>
+        <div style={s.heroInner}>
+
+          {/* LEFT — Text */}
+          <div style={s.heroLeft}>
+            <div style={s.heroBadge}>
+              {es ? 'PARA FAMILIAS CON NECESIDADES ESPECIALES' : 'FOR SPECIAL NEEDS FAMILIES'}
             </div>
-            <div className={styles.heroStatRow}>
-              <div className={styles.heroStat}>
-                <div className={styles.statNum}>7.5M</div>
-                <div className={styles.statLabel}>children with IEPs in the US</div>
-              </div>
-              <div className={styles.heroStat}>
-                <div className={styles.statNum}>Free</div>
-                <div className={styles.statLabel}>to start, always</div>
-              </div>
-              <div className={styles.heroStat}>
-                <div className={styles.statNum}>IDEA</div>
-                <div className={styles.statLabel}>ADA & Section 504 coverage</div>
-              </div>
+            <h1 style={s.heroHeadline}>
+              {es
+                ? <>El conocimiento es poder. La colaboración es progreso. Juntos — el IEP se <em style={s.heroGold}>APRUEBA.</em></>
+                : <>Knowledge is power. Partnership is progress. Together — the IEP gets <em style={s.heroGold}>APPROVED.</em></>
+              }
+            </h1>
+            <p style={s.heroSub}>
+              {es
+                ? 'Ada es tu guía impulsada por IA para el proceso del IEP, IDEA, la ADA y la Sección 504 — brindándote respuestas en lenguaje claro respaldadas por la ley federal real, para que puedas comunicarte con confianza y colaborar con el equipo de tu hijo.'
+                : 'Ada is your AI-powered guide to the IEP process, IDEA, ADA, and Section 504 — giving you plain language answers backed by real federal law, so you can communicate with confidence and collaborate with your child\'s team.'
+              }
+            </p>
+            <div style={s.heroBtns}>
+              <Link href="/ada" style={s.heroPrimary}>
+                {es ? 'Pregunta a Ada Gratis' : 'Ask Ada Free'}
+              </Link>
+              <Link href="#support" style={s.heroSecondary}>
+                {es ? 'Ver Cómo Te Apoyamos' : 'See How We Support You'}
+              </Link>
             </div>
           </div>
 
-          <div className={styles.adaCard}>
-            <div className={styles.adaHeader}>
-              <div className={styles.adaAvatar}>
-                <img src="/ada-avatar.png" alt="Ada" style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}} />
+          {/* RIGHT — Ada Avatar + Quote */}
+          <div style={s.heroRight}>
+            <div style={s.adaQuoteCard}>
+              <div style={s.adaAvatarWrap}>
+                <div style={s.adaAvatarRing}>
+                  <img src="/ada-avatar.png" alt="Ada" style={s.adaAvatarImg}
+                    onError={(e) => { e.target.style.display = 'none'; }} />
+                  <span style={s.adaAvatarInitial}>A</span>
+                </div>
               </div>
-              <div className={styles.adaTitle}>
-                <strong>Ada</strong>
-                <span>IEP Approved AI Guide</span>
-              </div>
+              <blockquote style={s.adaQuote}>
+                {es
+                  ? '"El conocimiento es poder. Y conocer la ley te da la confianza para entrar a cualquier sala y abogar por el futuro de tu hijo."'
+                  : '"Knowledge is power. And knowing the law gives you the confidence to walk into any room and advocate for your child\'s future."'
+                }
+              </blockquote>
+              <p style={s.adaQuoteAttr}>— Ada, {es ? 'Tu Guía de IEP Approved' : 'Your IEP Approved Guide'}</p>
+              <Link href="/ada" style={s.adaQuoteBtn}>
+                {es ? 'Habla con Ada hoy' : 'Talk to Ada today'} →
+              </Link>
             </div>
-            <div className={styles.adaMessage}>
-              Hi — I&apos;m Ada. I know federal special education law inside and out. Ask me anything about your child&apos;s IEP, their rights under <strong>IDEA</strong>, or what the school is required to provide.
-            </div>
-            <div className={styles.adaInputRow}>
-              <input
-                className={styles.adaInput}
-                type="text"
-                placeholder="e.g. Can the school remove my child from a field trip?"
-                value={heroInput}
-                onChange={e => setHeroInput(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && heroInput.trim()) window.location.href = `/ada?q=${encodeURIComponent(heroInput)}` }}
-              />
-              <button
-                className={styles.adaSend}
-                onClick={() => { if (heroInput.trim()) window.location.href = `/ada?q=${encodeURIComponent(heroInput)}` }}
-                aria-label="Ask Ada"
-              >
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
-              </button>
-            </div>
-            <div className={styles.adaDisclaimer}>Not legal advice. Always consult an attorney for your specific situation.</div>
-            <div style={{marginTop:'10px', padding:'8px 12px', background:'rgba(212,168,67,0.15)', border:'1px solid rgba(212,168,67,0.3)', borderRadius:'8px', fontSize:'11px', color:'#D4A843', textAlign:'center'}}>
-              🇪🇸 ¿Hablas español? Ada también — solo pregúntale en español.
-            </div>
+          </div>
+        </div>
+
+        {/* STATS ROW */}
+        <div style={s.statsRow}>
+          <div style={s.stat}>
+            <span style={s.statNum}>7.5M</span>
+            <span style={s.statLabel}>{es ? 'niños con IEPs en los EE.UU.' : 'children with IEPs in the US'}</span>
+          </div>
+          <div style={s.statDivider} />
+          <div style={s.stat}>
+            <span style={s.statNum}>{es ? 'Gratis' : 'Free'}</span>
+            <span style={s.statLabel}>{es ? 'para comenzar, siempre' : 'to start, always'}</span>
+          </div>
+          <div style={s.statDivider} />
+          <div style={s.stat}>
+            <span style={s.statNum}>IDEA</span>
+            <span style={s.statLabel}>{es ? 'ADA y Sección 504' : 'ADA & Section 504'}</span>
           </div>
         </div>
       </section>
 
-      <div className={styles.originStrip}>
-        <p>&ldquo;Knowledge is power. Partnership is progress. Together — the IEP gets APPROVED.&rdquo;</p>
-      </div>
+      {/* ══════════════════════════════════════════════════════════════════════
+          HOW IT WORKS — FLIP CARDS
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section id="how-it-works" style={s.howSection}>
+        <div style={s.sectionInner}>
+          <p style={s.eyebrow}>{es ? 'CÓMO FUNCIONA' : 'HOW IT WORKS'}</p>
+          <h2 style={s.sectionTitle}>
+            {es ? 'De perdido a informado en minutos.' : 'From lost to informed in minutes.'}
+          </h2>
+          <p style={s.sectionSub}>
+            {es
+              ? 'No necesitas un título en derecho. Necesitas a Ada — y la confianza para entrar a esa reunión sabiendo tus derechos.'
+              : "You don't need a law degree. You need Ada — and the confidence to walk into that meeting knowing your rights."
+            }
+          </p>
 
-      <section className={styles.section} id="how-it-works">
-        <div className={styles.sectionInner}>
-          <span className={styles.sectionLabel}>How It Works</span>
-          <h2 className={styles.sectionTitle}>From lost to informed<br />in minutes.</h2>
-          <p className={styles.sectionSub}>You don&apos;t need a law degree. You need Ada — and the confidence to walk into that meeting knowing your rights.</p>
-          <div className={styles.stepsGrid}>
-            {[
-              { num: '01', icon: '💬', title: 'Ask Ada anything', desc: 'Type your question the way you\'d ask a trusted friend. Ada will find the answers and resources you need. No need to be formal — just ask.' },
-              { num: '02', icon: '⚖️', title: 'Get the law, not just an opinion', desc: 'Ada cites the specific statute — IDEA, ADA, Section 504 — so you can walk into any meeting and know exactly where the law stands. No more guessing.' },
-              { num: '03', icon: '🛡️', title: 'Advocate with confidence', desc: 'Use Ada\'s answers to write letters, prepare for meetings, and push back when the school says no. Knowledge is the difference between a "no" and a "yes."' },
-            ].map(step => (
-              <div key={step.num} className={styles.stepCard}>
-                <div className={styles.stepNum}>{step.num}</div>
-                <div className={styles.stepIcon}>{step.icon}</div>
-                <div className={styles.stepTitle}>{step.title}</div>
-                <div className={styles.stepDesc}>{step.desc}</div>
+          <div style={s.cardsRow}>
+            {cards.map(card => (
+              <div key={card.id} style={s.cardWrap}
+                onClick={() => setFlippedCard(flippedCard === card.id ? null : card.id)}>
+                <div style={{
+                  ...s.cardInner,
+                  transform: flippedCard === card.id ? 'rotateY(180deg)' : 'rotateY(0deg)',
+                }}>
+                  {/* FRONT */}
+                  <div style={s.cardFront}>
+                    <span style={s.cardNumber}>{card.front.number}</span>
+                    <h3 style={s.cardTitle}>{card.front.title}</h3>
+                    <p style={s.cardDesc}>{card.front.desc}</p>
+                    <span style={s.cardHint}>
+                      {es ? 'Toca para ver más' : 'Click to learn more'}
+                    </span>
+                  </div>
+                  {/* BACK */}
+                  <div style={s.cardBack}>
+                    {card.back.visual === 'chat' && (
+                      <div style={s.cardVisualChat}>
+                        <div style={s.chatBubbleAda}>
+                          <span style={s.chatLabel}>Ada</span>
+                          <p style={s.chatText}>{es ? 'Bajo IDEA, tu hijo tiene derecho a una Educación Pública Apropiada y Gratuita...' : 'Under IDEA, your child has the right to a Free Appropriate Public Education...'}</p>
+                        </div>
+                        <div style={s.chatBubbleUser}>{es ? '¿Puede la escuela cambiar su aula?' : 'Can the school change his classroom?'}</div>
+                      </div>
+                    )}
+                    {card.back.visual === 'law' && (
+                      <div style={s.cardVisualLaw}>
+                        <div style={s.lawCitation}>
+                          <span style={s.lawIcon}>§</span>
+                          <span style={s.lawText}>IDEA 20 U.S.C. § 1414(e)</span>
+                        </div>
+                        <p style={s.lawExplain}>{es ? 'En lenguaje sencillo: La escuela necesita tu acuerdo escrito antes de cambiar el aula de tu hijo.' : 'Plain language: The school needs your written agreement before changing your child\'s placement.'}</p>
+                      </div>
+                    )}
+                    {card.back.visual === 'advocate' && (
+                      <div style={s.cardVisualAdvocate}>
+                        <div style={s.letterPreview}>
+                          <div style={s.letterLine} />
+                          <div style={s.letterLine} />
+                          <div style={s.letterLineSm} />
+                          <div style={s.letterLineSm} />
+                          <div style={s.letterLine} />
+                        </div>
+                        <p style={s.advocateText}>{es ? 'Prepara cartas. Conoce tus derechos. Entra preparada.' : 'Prepare letters. Know your rights. Walk in prepared.'}</p>
+                      </div>
+                    )}
+                    <Link href={card.back.link} style={s.cardCta}
+                      onClick={e => e.stopPropagation()}>
+                      {card.back.cta} →
+                    </Link>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className={styles.adaSection} id="ada">
-        <div className={styles.sectionInner}>
-          <div className={styles.adaTwoCol}>
-            <div>
-              <span className={styles.sectionLabel}>Meet Ada</span>
-              <h2 className={`${styles.sectionTitle} ${styles.onPlum}`}>Your AI guide to IEP law.</h2>
-              <p className={`${styles.sectionSub} ${styles.onPlumSub}`}>Ada knows IDEA, ADA, and Section 504 — and she&apos;s here to help you understand your child&apos;s rights, every step of the way.</p>
-              <div className={styles.adaFeatureList}>
-                {[
-                  { title: 'Cites the exact law', desc: 'Every answer references the specific federal statute — so you know exactly where the law stands.' },
-                  { title: 'Just ask — Ada understands', desc: 'Type your question the way you\'d ask a trusted friend. Ada will find the answers and resources you need. No need to be formal — just ask.' },
-                  { title: 'Honest about limits', desc: 'When you need a real attorney, Ada will tell you. No false confidence.' },
-                  { title: '¿Hablas español? Ada también.', desc: 'Puedes escribirle a Ada en español — ella te responderá en español con la información que necesitas.' },
-                ].map(f => (
-                  <div key={f.title} className={styles.adaFeatureItem}>
-                    <span className={styles.checkmark}>✓</span>
-                    <div>
-                      <div className={styles.adaFeatureTitle}>{f.title}</div>
-                      <div className={styles.adaFeatureDesc}>{f.desc}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+      {/* ══════════════════════════════════════════════════════════════════════
+          MEET ADA
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section style={s.meetAda}>
+        <div style={s.meetAdaInner}>
+
+          {/* LEFT — Ada Avatar */}
+          <div style={s.meetAdaLeft}>
+            <div style={s.meetAdaRing}>
+              <img src="/ada-avatar.png" alt="Ada" style={s.meetAdaImg}
+                onError={(e) => { e.target.style.display = 'none'; }} />
+              <span style={s.meetAdaInitial}>ADA</span>
             </div>
-            <div className={styles.adaDemoBox}>
-              <div className={styles.adaDemoTopbar}>
-                <span className={styles.dot} style={{background:'#FF5F57'}}></span>
-                <span className={styles.dot} style={{background:'#FFBD2E'}}></span>
-                <span className={styles.dot} style={{background:'#28CA41'}}></span>
-                <span className={styles.topbarLabel}>Ada — IEP Approved</span>
-                <span className={styles.topbarStatus}><span className={styles.statusDot}></span> Online</span>
+            <h2 style={s.meetAdaName}>Ada</h2>
+            <p style={s.meetAdaTitle}>{es ? 'Tu Guía de IA de IEP Approved' : 'Your IEP Approved AI Guide'}</p>
+            <div style={s.onlineBadge}>
+              <span style={s.onlineDot} />
+              {es ? 'En línea ahora' : 'Online now'}
+            </div>
+          </div>
+
+          {/* RIGHT — Features + Quote */}
+          <div style={s.meetAdaRight}>
+            <p style={s.meetAdaEyebrow}>{es ? 'CONOCE A ADA' : 'MEET ADA'}</p>
+            <h2 style={s.meetAdaHeadline}>
+              {es ? 'Tu guía de IA para el derecho del IEP.' : 'Your AI guide to IEP law.'}
+            </h2>
+            <p style={s.meetAdaDesc}>
+              {es
+                ? 'Ada conoce IDEA, la ADA y la Sección 504 — y está aquí para ayudarte a entender los derechos de tu hijo en cada paso del camino.'
+                : 'Ada knows IDEA, ADA, and Section 504 — and she\'s here to help you understand your child\'s rights, every step of the way.'
+              }
+            </p>
+
+            <div style={s.featuresList}>
+              {features.map((feat, i) => (
+                <div key={i} style={s.featureItem}>
+                  <span style={s.featureCheck}>✓</span>
+                  <div>
+                    <p style={s.featureTitle}>{feat.title}</p>
+                    <p style={s.featureDesc}>{feat.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <Link href="/ada" style={s.meetAdaBtn}>
+              {es ? 'Pregúntale a Ada tu pregunta' : 'Ask Ada your question'} →
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          PRICING / MEMBERSHIP
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section id="support" style={s.pricingSection}>
+        <div style={s.sectionInner}>
+          <p style={s.eyebrow}>{es ? 'MEMBRESÍA' : 'MEMBERSHIP'}</p>
+          <h2 style={s.sectionTitle}>
+            {es
+              ? 'Únete a nuestra comunidad — elige la membresía que se adapta a tu familia.'
+              : 'Join our community — choose the membership that fits your family.'
+            }
+          </h2>
+
+          <div style={s.pricingRow}>
+
+            {/* FREE TILE */}
+            <div style={s.pricingCard}>
+              <p style={s.pricingTier}>{es ? 'GRATIS' : 'FREE'}</p>
+              <p style={s.pricingPrice}>$0</p>
+              <p style={s.pricingPriceSub}>{es ? 'siempre gratis para comenzar' : 'always free to start'}</p>
+              <p style={s.pricingDesc}>
+                {es
+                  ? 'Hazle 5 preguntas a Ada hoy, sin necesidad de registrarte. Únete a nuestra comunidad y haz hasta 10 preguntas al mes de forma gratuita.'
+                  : 'Ask Ada 5 questions today, no signup needed. Join our community and ask up to 10 questions per month — free.'
+                }
+              </p>
+              <Link href="/ada" style={s.pricingBtnOutline}>
+                {es ? 'Comenzar Gratis' : 'Start Free'}
+              </Link>
+            </div>
+
+            {/* ADA UNLIMITED — CENTER GOLD */}
+            <div style={s.pricingCardGold}>
+              <div style={s.mostPopularBadge}>
+                {es ? 'MÁS POPULAR' : 'MOST POPULAR'}
               </div>
-              <div className={styles.adaDemoMessages}>
-                <div className={styles.msgUser}>My son&apos;s school says they want to change his placement to a self-contained classroom. Can they do that without my consent?</div>
-                <div className={styles.msgAda}>
-                  No — they cannot make a placement change without your consent. Under <strong>IDEA (20 U.S.C. § 1414(e))</strong>, you are a required member of your child&apos;s IEP team, and any change to educational placement requires your written agreement.
-                  <span className={styles.cite}>📖 IDEA § 1414(e) — Parental Consent</span>
+              <p style={s.pricingTierGold}>Ada Unlimited</p>
+              <p style={s.pricingPriceGold}>$4.99</p>
+              <p style={s.pricingPriceSubGold}>{es ? 'por mes · cancela cuando quieras' : 'per month · cancel anytime'}</p>
+              <p style={s.pricingDescGold}>
+                {es
+                  ? 'Acceso ilimitado a Ada por menos de una taza de café. Diseñado intencionalmente — porque cada familia merece acceso a la ley, no solo quienes pueden pagar un abogado.'
+                  : 'Unlimited access to Ada for less than a cup of coffee. Designed intentionally — because every family deserves access to the law, not just those who can afford an attorney.'
+                }
+              </p>
+              <ul style={s.featureListGold}>
+                {unlimitedFeatures.map((f, i) => (
+                  <li key={i} style={s.featureListItem}>
+                    <span style={s.featureListCheck}>✓</span> {f}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/signup" style={s.pricingBtnGold}>
+                {es ? 'Obtener Ada Sin Límites' : 'Get Ada Unlimited'} →
+              </Link>
+            </div>
+
+            {/* RESOURCE CENTER TILE */}
+            <div style={s.pricingCard}>
+              <p style={s.pricingTier}>
+                {es ? 'CENTRO DE RECURSOS' : 'RESOURCE CENTER'}
+              </p>
+              <p style={s.pricingPrice}>{es ? 'À La Carte' : 'À La Carte'}</p>
+              <p style={s.pricingPriceSub}>{es ? 'sin membresía requerida' : 'no membership required'}</p>
+              <p style={s.pricingDesc}>
+                {es
+                  ? 'El Centro de Recursos Aprobados de IEP — materiales descargables, libros y guías seleccionados para familias como la tuya.'
+                  : 'The IEP Approved Resource Center — downloadable materials, books, and guides curated for families like yours.'
+                }
+              </p>
+              <ul style={s.resourceList}>
+                {resourceItems.map((item, i) => (
+                  <li key={i} style={s.resourceListItem}>
+                    <span style={s.resourceCheck}>✓</span> {item}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/storefront" style={s.pricingBtnOutline}>
+                {es ? 'Ver Recursos' : 'Browse Resources'}
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          OUR STORY
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section id="our-story" style={s.storySection}>
+        <div style={s.storyInner}>
+          <p style={s.eyebrowDark}>{es ? 'NUESTRA HISTORIA' : 'OUR STORY'}</p>
+          <h2 style={s.storySectionTitle}>
+            {es ? 'Construido por una mamá. Para todas las familias.' : 'Built by a mom. For every family.'}
+          </h2>
+
+          {/* PHOTO GALLERY */}
+          <div style={s.photoGallery}>
+            {robbiePhotos.map((photo, i) => (
+              <div key={i} style={s.photoWrap}>
+                <img src={photo.src} alt={photo.alt} style={s.photo}
+                  onError={(e) => { e.target.parentElement.style.display = 'none'; }} />
+              </div>
+            ))}
+          </div>
+
+          {/* STORY TEXT */}
+          <div style={s.storyContent}>
+            <div style={s.storyText}>
+              <p style={s.storyPara}>
+                {es
+                  ? 'El diagnóstico llegó a través de la puerta de un baño. Su padre llamó desde la sala de espera y dijo "Oh, gracias a Dios." La escuela sugirió que renunciara a su trabajo. Un conductor de autobús se negó a ayudar a Robbie con su silla de ruedas porque no tenía un 504 en el archivo — el transporte de puerta a puerta ya estaba en su IEP.'
+                  : 'The diagnosis came through a bathroom door. Her father called from the waiting room and said "Oh thank God." The school suggested she quit her job. A bus driver refused to help Robbie with his wheelchair because he didn\'t have a 504 on file — door-to-door transportation was already in his IEP.'
+                }
+              </p>
+              <p style={s.storyPara}>
+                {es
+                  ? 'Ella se mantuvo tranquila porque conocía la ley.'
+                  : 'She stayed calm because she knew the law.'
+                }
+              </p>
+              <p style={s.storyPara}>
+                {es
+                  ? 'En la primera reunión del IEP, alguien dijo algo que no esperaba — algo que la sacó de su crisis y la trajo de vuelta a tierra.'
+                  : 'At the first IEP meeting, someone said something she didn\'t expect — something that snapped her out of her tailspin and brought her back to earth.'
+                }
+              </p>
+              <blockquote style={s.storyQuote}>
+                {es
+                  ? '"Oh, gracias a Dios. Kimberly, de todas las cosas que ese médico pudo haber entrado a decirte hoy, esta es la mejor noticia que has recibido. Entonces, ¿qué? Él todavía va a hacer todas las cosas. Es prematuro, pesa tres libras, lucha por respirar por sí solo. Si dejas ese hospital y lo único que tiene es síndrome de Down — estás ganando."'
+                  : '"Oh — thank God. Kimberly, of all the things that doctor could have walked into that room and told you today, this is the best news you\'ve ever gotten. So what — he\'s still going to do all the things. He\'s premature, three pounds, struggling to breathe on his own. If you leave that hospital and the only thing he has is Down syndrome — you\'re winning."'
+                }
+              </blockquote>
+              <p style={s.storyPara}>
+                {es ? 'Y tenía razón.' : 'And he was right.'}
+              </p>
+              <p style={s.storyPara}>
+                {es
+                  ? 'Ese momento me enseñó todo lo que necesitaba saber sobre el poder de las palabras — las correctas, en el momento correcto.'
+                  : 'That moment taught me everything I needed to know about the power of words — the right ones, at the right time.'
+                }
+              </p>
+              <p style={s.storyPara}>
+                {es
+                  ? 'Esa es la energía sobre la que se construyó IEP Approved.'
+                  : 'That is the energy IEP Approved was built on.'
+                }
+              </p>
+            </div>
+
+            {/* CLOSING QUOTE */}
+            <div style={s.closingQuoteWrap}>
+              <div style={s.closingQuoteLine} />
+              <p style={s.closingQuote}>
+                {es
+                  ? '"IEP Approved LLC fue desarrollado con la mentalidad de que la comunicación y la colaboración son el núcleo de todo lo que hacemos al abogar por nuestros hijos. El conocimiento es poder — y conocer la ley te da la confianza para entrar a cualquier sala y abogar por el futuro de tu hijo. Por eso existe IEP Approved LLC. No para enseñar a los padres a pelear. Sino para asociarse, abogar y darle a cada familia el conocimiento para ganar."'
+                  : '"IEP Approved LLC was developed with the mindset that communication and collaboration are at the core of everything we do when advocating for our children. Knowledge is power — and knowing the law gives you the confidence to walk into any room and advocate for your child\'s future. That is why IEP Approved LLC exists. Not to teach parents to fight. But to partner, advocate, and give every family the knowledge to win."'
+                }
+              </p>
+              <div style={s.closingAuthor}>
+                <div style={s.closingAvatar}>K</div>
+                <div>
+                  <p style={s.closingName}>Kimberly Sandro</p>
+                  <p style={s.closingTitle}>{es ? 'Mamá de Robbie y Fundadora de IEP Approved' : "Robbie's Mom and Founder of IEP Approved"}</p>
                 </div>
               </div>
-              <div className={styles.adaDemoInputRow}>
-                <a href="/ada" className={styles.adaDemoBtn}>Ask Ada your question →</a>
-              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className={styles.pricingSection} id="pricing">
-        <div className={styles.sectionInner}>
-          <span className={styles.sectionLabel}>Pricing</span>
-          <h2 className={`${styles.sectionTitle} ${styles.onPlum}`}>Ada is free. Always.</h2>
-          <p className={`${styles.sectionSub} ${styles.onPlumSub}`}>Additional resources, tools, and community are here when you&apos;re ready for more support.</p>
-          <div className={styles.pricingGrid}>
-            <div className={styles.pricingCard}>
-              <div className={styles.priceLabel}>Free</div>
-              <div className={styles.priceAmount}>$0</div>
-              <div className={styles.pricePeriod}>always free</div>
-              <div className={styles.priceDesc}>Everything you need to understand your child&apos;s federal rights and ask Ada your first questions.</div>
-              <ul className={styles.priceFeatures}>
-                {['Unlimited Ada Q&A (federal law)','Federal law library','IEP terminology glossary','Law change email alerts'].map(f => <li key={f} className={styles.priceFeature}>{f}</li>)}
-              </ul>
-              <a href="/ada" className={styles.btnPricingGhost}>Get Started Free</a>
+      {/* ══════════════════════════════════════════════════════════════════════
+          STAY INFORMED
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section style={s.emailSection}>
+        <div style={s.emailInner}>
+          <p style={s.eyebrow}>{es ? 'MANTENTE INFORMADO' : 'STAY INFORMED'}</p>
+          <h2 style={s.emailTitle}>
+            {es
+              ? 'Recibe alertas de cambios en la ley antes de que afecten a tu hijo.'
+              : 'Get law change alerts before they affect your child.'
+            }
+          </h2>
+          <p style={s.emailSub}>
+            {es
+              ? 'Monitoreamos la ley federal de educación especial y te enviamos alertas cuando algo cambia.'
+              : 'We monitor federal special education law and send you alerts when something changes.'
+            }
+          </p>
+          {!emailSubmitted ? (
+            <form onSubmit={handleEmailSubmit} style={s.emailForm}>
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder={es ? 'tu@correo.com' : 'your@email.com'}
+                style={s.emailInput}
+                required
+              />
+              <button type="submit" style={s.emailBtn}>
+                {es ? 'Unirse a la Comunidad' : 'Join the Community'}
+              </button>
+            </form>
+          ) : (
+            <div style={s.emailSuccess}>
+              <p style={s.emailSuccessText}>
+                {es ? 'Bienvenido. Revisa tu bandeja de entrada.' : 'Welcome. Check your inbox.'}
+              </p>
+              <Link href="/intake" style={s.emailCreateAccount}>
+                {es ? 'Crear tu cuenta gratuita' : 'Create your free account'} →
+              </Link>
             </div>
-            <div className={`${styles.pricingCard} ${styles.featured}`}>
-              <div className={styles.pricingBadge}>Most Popular</div>
-              <div className={styles.priceLabel}>IEP Pro</div>
-              <div className={styles.priceAmount}>$9.99</div>
-              <div className={styles.pricePeriod}>per month · cancel anytime</div>
-              <div className={styles.priceDesc}>For the parent who is ready to walk into every IEP meeting as the most prepared person in the room.</div>
-              <ul className={styles.priceFeatures}>
-                {['Everything in Free','Meeting prep checklists by disability','Document & letter templates','Ada with state law knowledge','State-based parent community access','Connect with families in your area','Playdates, meetups & local connections'].map(f => <li key={f} className={styles.priceFeature}>{f}</li>)}
-              </ul>
-              <a href="/signup?plan=pro" className={styles.btnPricingPlum}>Start IEP Pro →</a>
-            </div>
-            <div className={styles.pricingCard}>
-              <div className={styles.priceLabel}>Advocate+</div>
-              <div className={styles.priceAmount}>$24.99</div>
-              <div className={styles.pricePeriod}>per month · cancel anytime</div>
-              <div className={styles.priceDesc}>For families navigating complex disputes, transition planning, or district-level battles.</div>
-              <ul className={styles.priceFeatures}>
-                {['Everything in Pro','Transition planning tools (age 14+)','Attorney & advocate directory','Due process guidance'].map(f => <li key={f} className={styles.priceFeature}>{f}</li>)}
-              </ul>
-              <button className={styles.btnPricingGhost} disabled style={{opacity:0.5,cursor:'not-allowed'}}>Coming Soon</button>
-            </div>
-          </div>
+          )}
+          <p style={s.emailFine}>
+            {es
+              ? 'Sin spam. Cancela cuando quieras. Tu privacidad está protegida.'
+              : 'No spam. Unsubscribe anytime. Your privacy is protected.'
+            }
+          </p>
         </div>
       </section>
 
-      <section className={styles.originSection} id="about">
-        <div className={styles.originInner}>
-          <div>
-            <img
-              src="/kim-and-robbie.jpg"
-              alt="Kimberly and Robbie"
-              style={{width:'100%', maxWidth:'460px', borderRadius:'20px', border:'4px solid #D4A843', boxShadow:'0 20px 60px rgba(45,27,78,0.15)', display:'block', marginBottom:'32px'}}
-            />
-            <blockquote className={styles.originQuote}>
-              We don&apos;t teach parents to fight. We teach them to partner. The seat at the table is already yours — knowledge gives you the voice to use it.
-            </blockquote>
-            <div className={styles.originSig}>
-              <div className={styles.originSigAvatar}>K</div>
-              <div>
-                <div className={styles.originSigName}>Kimberly</div>
-                <div className={styles.originSigTitle}>Robbie&apos;s Mom and Founder of IEP Approved</div>
-              </div>
-            </div>
+      {/* ══════════════════════════════════════════════════════════════════════
+          FOOTER
+      ══════════════════════════════════════════════════════════════════════ */}
+      <footer style={s.footer}>
+        <div style={s.footerInner}>
+
+          {/* BRAND */}
+          <div style={s.footerBrand}>
+            <p style={s.footerLogo}>
+              <span style={s.footerLogoIEP}>IEP </span>
+              <span style={s.footerLogoApproved}>Approved</span>
+            </p>
+            <p style={s.footerTagline}>
+              {es
+                ? 'El conocimiento es poder. La colaboración es progreso. Juntos — el IEP se APRUEBA.'
+                : 'Knowledge is power. Partnership is progress. Together — the IEP gets APPROVED.'
+              }
+            </p>
           </div>
-          <div className={styles.originText}>
-            <span className={styles.sectionLabel}>Our Story</span>
-            <p>The first question I get asked — more than any other — is: <em>did you know?</em></p>
-            <p>No. I didn&apos;t know.</p>
-            <p>Robbie&apos;s diagnosis came when he was a week old. The doctor was in a rush. I was in the bathroom. He delivered the news quickly, through a closed door — I could hear the awkward sadness in his voice. He took the easy way out. It was a hit and run.</p>
-            <p>When I walked out of that bathroom and made my way down the hall to the nursery, something had shifted. The looks of congratulations and excitement that had greeted me all week were gone. In their place was pity. Averted eyes. Uncomfortable silence. They had all known. They had been avoiding me all morning, waiting for the doctor to deliver his news.</p>
-            <p>When I asked why no one had prepared me — so I could be truly present for that moment — I was told: <em>&ldquo;That&apos;s not my job. The doctor has to give you results.&rdquo;</em></p>
-            <p>They were right. It wasn&apos;t their job to give me the results. But it was absolutely their job to make sure I had support. That I wasn&apos;t alone. That resources were available to me the moment I needed them.</p>
-            <p>One nurse, with the best of intentions, said: <em>&ldquo;Why do bad things happen to good people?&rdquo;</em></p>
-            <p>I want to be clear about something: Robbie is not a bad thing. He never was.</p>
-            <p>I was sitting in the nursery holding him for the first time since the diagnosis — and I needed to say it out loud. The doctor and staff had left it for me to tell Robbie&apos;s dad. I needed to hear myself say the words. I called my father. I was crying hysterically.</p>
-            <p><em>&ldquo;Kimberly — what&apos;s wrong?&rdquo;</em></p>
-            <p><em>&ldquo;Robbie has Down syndrome.&rdquo;</em></p>
-            <p>There was a pause. Then a deep sigh. And then he said something I did not expect — something that snapped me out of my tailspin and brought me back to earth.</p>
-            <p><em>&ldquo;Oh — thank God. Kimberly, of all the things that doctor could have walked into that room and told you today, this is the best news you&apos;ve ever gotten. So what — he&apos;s still going to do all the things. He&apos;s premature, three pounds, struggling to breathe on his own. If you leave that hospital and the only thing he has is Down syndrome — you&apos;re winning.&rdquo;</em></p>
-            <p>And he was right.</p>
-            <p>That moment taught me everything I needed to know about the power of words. The right ones — at the right time — from someone who loves you — can completely change your future. They can pull you back from the edge of fear and plant you firmly in possibility.</p>
-            <p>That&apos;s the energy IEP Approved was built on.</p>
-            <p>Just because an outcome isn&apos;t what you expected does not mean it has to be hard, impossible, or negative. How we communicate with each other — the words we choose, the support we offer, the resources we make available — has the greatest impact on how we move forward. Community, knowledge, and access to the right resources can completely change your outlook. They can change your future.</p>
-            <p>My first IEP meeting was no different.</p>
-            <p>We lived in a rural area. Daycare options that could meet Robbie&apos;s needs were limited. When busing became a barrier — too far, the administrator said — she wanted to know if I was going to drive him myself.</p>
-            <p>I said no.</p>
-            <p>Access to a free and appropriate public education is Robbie&apos;s right under IDEA. His right to transportation is part of that. The school system needed to meet its obligation.</p>
-            <p>The administrator was frustrated. She told me — this mom, sitting across from her — that Robbie was going to have a lot of needs like this, and suggested I consider quitting my job to be more present. To transport him myself.</p>
-            <p>I asked her if she asked every parent that question.</p>
-            <p>Then I told her: No. I would continue to be a parent who works — who provides food, housing, and stability for her child. And the school system would need to meet its legal obligation.</p>
-            <p>I stayed calm. Not because it wasn&apos;t hard. But because I had knowledge. I knew the law. And knowing the law made me feel something I hadn&apos;t felt since that bathroom door swung open.</p>
-            <p><strong>Empowered.</strong></p>
-            <p>That&apos;s why IEP Approved exists.</p>
-            <p>Not to teach parents to fight — but to teach everyone at the table to partner. We built this for parents who want to walk in informed. For educators who want families to feel supported, not adversarial. For healthcare professionals who want their patients to have access to the resources and community they need to thrive.</p>
-            <p>When everyone speaks the same language — when the law is clear, the resources are accessible, and the support system is real — the outcome for the child is always better.</p>
-            <p>Because the moment you know your rights, everything changes. The conversation changes. The dynamic changes. You are no longer an outsider in your own child&apos;s education.</p>
-            <p>You belong at that table. You always did.</p>
-            <p><strong>We built IEP Approved so no parent ever has to navigate this alone.</strong></p>
-            <p><em>— Kimberly, Robbie&apos;s Mom and Founder of IEP Approved</em></p>
+
+          {/* PLATFORM */}
+          <div style={s.footerCol}>
+            <p style={s.footerColTitle}>{es ? 'PLATAFORMA' : 'PLATFORM'}</p>
+            <Link href="/ada" style={s.footerLink}>{es ? 'Pregunta a Ada' : 'Ask Ada'}</Link>
+            <Link href="/storefront" style={s.footerLink}>{es ? 'Centro de Recursos' : 'Resource Center'}</Link>
+            <Link href="/signup" style={s.footerLink}>Ada Unlimited</Link>
+            <Link href="/community" style={s.footerLink}>{es ? 'Comunidad' : 'Community'}</Link>
+          </div>
+
+          {/* COMPANY */}
+          <div style={s.footerCol}>
+            <p style={s.footerColTitle}>{es ? 'EMPRESA' : 'COMPANY'}</p>
+            <Link href="/#our-story" style={s.footerLink}>{es ? 'Nuestra Historia' : 'Our Story'}</Link>
+            <Link href="/contact" style={s.footerLink}>{es ? 'Contáctenos' : 'Contact Us'}</Link>
+            <Link href="/social" style={s.footerLink}>{es ? 'Redes Sociales' : 'Social Media'}</Link>
+            <Link href="/feedback" style={s.footerLink}>{es ? 'Comentarios' : 'Feedback'}</Link>
+          </div>
+
+          {/* LEGAL */}
+          <div style={s.footerCol}>
+            <p style={s.footerColTitle}>{es ? 'LEGAL' : 'LEGAL'}</p>
+            <Link href="/terms" style={s.footerLink}>{es ? 'Términos de Servicio' : 'Terms of Service'}</Link>
+            <Link href="/privacy" style={s.footerLink}>{es ? 'Política de Privacidad' : 'Privacy Policy'}</Link>
+            <Link href="/disclaimer" style={s.footerLink}>{es ? 'Descargo de Responsabilidad' : 'Disclaimer'}</Link>
           </div>
         </div>
-      </section>
 
-      <section className={styles.emailSection}>
-        <span className={styles.sectionLabel} style={{display:'block',marginBottom:'12px'}}>Stay Informed</span>
-        <h2 className={`${styles.sectionTitle} ${styles.onPlum}`}>Get law change alerts<br />before they affect your child.</h2>
-        <p className={`${styles.sectionSub} ${styles.onPlumSub}`} style={{textAlign:'center',margin:'0 auto 36px'}}>We monitor federal special education law and send you plain-English alerts when something changes. Free, always.</p>
-        <EmailForm />
-      </section>
-
-      <footer className={styles.footer}>
-        <div className={styles.footerInner}>
-          <div>
-            <div className={styles.footerLogo}>IEP <span>Approved</span></div>
-            <div className={styles.footerTagline}>Knowledge is power. Partnership is progress. Together — the IEP gets APPROVED.</div>
-          </div>
-          <div>
-            <div className={styles.footerColTitle}>Platform</div>
-            <ul className={styles.footerLinks}><li><a href="/ada">Ask Ada</a></li><li><a href="#pricing">Find Your Support</a></li><li><a href="/signup">Ada Unlimited</a></li></ul>
-          </div>
-          <div>
-            <div className={styles.footerColTitle}>Company</div>
-            <ul className={styles.footerLinks}><li><a href="#about">Our Story</a></li><li><a href="/contact">Contact Us</a></li><li><a href="/contact">info@iepapproved.com</a></li></ul>
-          </div>
-          <div>
-            <div className={styles.footerColTitle}>Legal</div>
-            <ul className={styles.footerLinks}><li><a href="/terms">Terms</a></li><li><a href="/privacy">Privacy</a></li><li><a href="/disclaimer">Disclaimer</a></li><li><a href="/contact">Contact</a></li></ul>
-          </div>
-        </div>
-        <div className={styles.footerBottom}>
-          <p>© 2026 IEP Approved. All rights reserved.</p>
-          <p className={styles.footerDisclaimer}>IEP Approved and Ada provide legal information, not legal advice. Content is for educational purposes only and does not constitute an attorney-client relationship.</p>
+        {/* AI DISCLOSURE */}
+        <div style={s.footerDisclosure}>
+          <p style={s.footerDisclosureText}>
+            {es
+              ? 'Ada es una asistente de IA, no una abogada humana. IEP Approved proporciona información legal solo con fines educativos y no constituye una relación abogado-cliente. Ada funciona con inteligencia artificial.'
+              : 'Ada is an AI assistant, not a human attorney. IEP Approved provides legal information for educational purposes only and does not constitute an attorney-client relationship. Ada is powered by artificial intelligence.'
+            }
+          </p>
+          <p style={s.footerCopy}>
+            {es
+              ? '© 2026 IEP Approved LLC. Todos los derechos reservados.'
+              : '© 2026 IEP Approved LLC. All rights reserved.'
+            }
+          </p>
         </div>
       </footer>
+
+      <style>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-8px); }
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; }
+        @media (max-width: 768px) {
+          .hero-inner { flex-direction: column !important; }
+          .pricing-row { flex-direction: column !important; }
+          .meet-ada-inner { flex-direction: column !important; }
+          .story-inner { flex-direction: column !important; }
+          .photo-gallery { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+      `}</style>
     </>
-  )
+  );
 }
 
-function EmailForm() {
-  const [email, setEmail] = useState('')
-  const [status, setStatus] = useState('idle')
-  const styles2 = {
-    form: { display:'flex', gap:'12px', maxWidth:'480px', margin:'0 auto', flexWrap:'wrap' },
-    input: { flex:1, minWidth:'200px', background:'rgba(255,255,255,0.1)', border:'1px solid rgba(255,255,255,0.2)', borderRadius:'8px', padding:'13px 16px', fontFamily:'Outfit,sans-serif', fontSize:'14px', color:'#fff', outline:'none' },
-    btn: { background:'#D4A843', color:'#1E1035', border:'none', borderRadius:'8px', padding:'13px 24px', fontFamily:'Outfit,sans-serif', fontSize:'14px', fontWeight:700, cursor:'pointer', whiteSpace:'nowrap' },
-    note: { fontSize:'11px', color:'rgba(255,255,255,0.3)', marginTop:'12px', textAlign:'center' },
-    success: { color:'#D4A843', fontWeight:600, textAlign:'center', fontSize:'15px' }
-  }
+// ─── STYLES ───────────────────────────────────────────────────────────────────
+const s = {
+  // HERO
+  hero: { backgroundColor: '#2D1B4E', paddingBottom: '0' },
+  heroInner: { maxWidth: '1200px', margin: '0 auto', padding: '72px 24px 48px', display: 'flex', gap: '48px', alignItems: 'center', flexWrap: 'wrap' },
+  heroLeft: { flex: '1', minWidth: '300px' },
+  heroBadge: { display: 'inline-block', backgroundColor: 'rgba(212,168,67,0.15)', border: '1px solid rgba(212,168,67,0.4)', color: '#D4A843', padding: '6px 14px', borderRadius: '20px', fontSize: '11px', fontWeight: '700', letterSpacing: '2px', fontFamily: 'Outfit, sans-serif', marginBottom: '20px' },
+  heroHeadline: { color: '#ffffff', fontSize: '52px', fontFamily: 'Cormorant Garamond, serif', fontWeight: '700', lineHeight: '1.15', margin: '0 0 20px' },
+  heroGold: { color: '#D4A843', fontStyle: 'normal' },
+  heroSub: { color: '#b8a8d0', fontSize: '18px', lineHeight: '1.7', margin: '0 0 32px', fontFamily: 'Outfit, sans-serif' },
+  heroBtns: { display: 'flex', gap: '16px', flexWrap: 'wrap' },
+  heroPrimary: { backgroundColor: '#D4A843', color: '#2D1B4E', padding: '14px 28px', borderRadius: '8px', textDecoration: 'none', fontSize: '16px', fontWeight: '800', fontFamily: 'Outfit, sans-serif', whiteSpace: 'nowrap' },
+  heroSecondary: { backgroundColor: 'transparent', border: '2px solid rgba(255,255,255,0.3)', color: '#ffffff', padding: '14px 28px', borderRadius: '8px', textDecoration: 'none', fontSize: '16px', fontWeight: '600', fontFamily: 'Outfit, sans-serif', whiteSpace: 'nowrap' },
 
-  const handleSubmit = async () => {
-    if (!email || !email.includes('@')) return
-    setStatus('loading')
-    await new Promise(r => setTimeout(r, 800))
-    setStatus('done')
-  }
+  // ADA QUOTE CARD
+  heroRight: { flex: '1', minWidth: '300px', display: 'flex', justifyContent: 'center' },
+  adaQuoteCard: { backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(212,168,67,0.3)', borderRadius: '20px', padding: '36px 32px', maxWidth: '420px', textAlign: 'center' },
+  adaAvatarWrap: { display: 'flex', justifyContent: 'center', marginBottom: '20px' },
+  adaAvatarRing: { width: '100px', height: '100px', borderRadius: '50%', border: '3px solid #D4A843', position: 'relative', overflow: 'hidden', backgroundColor: '#2D1B4E', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'float 3s ease-in-out infinite' },
+  adaAvatarImg: { width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', zIndex: 2 },
+  adaAvatarInitial: { color: '#D4A843', fontSize: '28px', fontWeight: '800', fontFamily: 'Cormorant Garamond, serif', zIndex: 1 },
+  adaQuote: { color: '#e8e0f0', fontSize: '17px', lineHeight: '1.7', fontStyle: 'italic', margin: '0 0 16px', fontFamily: 'Cormorant Garamond, serif' },
+  adaQuoteAttr: { color: '#D4A843', fontSize: '13px', fontWeight: '600', fontFamily: 'Outfit, sans-serif', margin: '0 0 20px' },
+  adaQuoteBtn: { display: 'inline-block', backgroundColor: '#D4A843', color: '#2D1B4E', padding: '11px 22px', borderRadius: '8px', textDecoration: 'none', fontSize: '14px', fontWeight: '800', fontFamily: 'Outfit, sans-serif' },
 
-  if (status === 'done') return <p style={styles2.success}>✓ You&apos;re on the list. We&apos;ll alert you when the law changes.</p>
+  // STATS
+  statsRow: { backgroundColor: 'rgba(0,0,0,0.2)', display: 'flex', justifyContent: 'center', gap: '0', borderTop: '1px solid rgba(212,168,67,0.2)' },
+  stat: { padding: '20px 48px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '4px' },
+  statNum: { color: '#D4A843', fontSize: '24px', fontWeight: '800', fontFamily: 'Cormorant Garamond, serif' },
+  statLabel: { color: '#b8a8d0', fontSize: '12px', fontFamily: 'Outfit, sans-serif' },
+  statDivider: { width: '1px', backgroundColor: 'rgba(255,255,255,0.1)', margin: '16px 0' },
 
-  return (
-    <div style={{position:'relative',zIndex:2}}>
-      <div style={styles2.form}>
-        <input style={styles2.input} type="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSubmit()} />
-        <button style={styles2.btn} onClick={handleSubmit} disabled={status === 'loading'}>{status === 'loading' ? '...' : 'Get Alerts Free'}</button>
-      </div>
-      <p style={styles2.note}>No spam. Just law changes that matter to your family. Unsubscribe anytime.</p>
-    </div>
-  )
-}
+  // COMMON
+  sectionInner: { maxWidth: '1200px', margin: '0 auto', padding: '0 24px' },
+  eyebrow: { color: '#D4A843', fontSize: '11px', fontWeight: '700', letterSpacing: '3px', fontFamily: 'Outfit, sans-serif', marginBottom: '12px' },
+  eyebrowDark: { color: '#D4A843', fontSize: '11px', fontWeight: '700', letterSpacing: '3px', fontFamily: 'Outfit, sans-serif', marginBottom: '12px' },
+  sectionTitle: { color: '#ffffff', fontSize: '40px', fontFamily: 'Cormorant Garamond, serif', fontWeight: '700', margin: '0 0 16px', lineHeight: '1.2' },
+  sectionSub: { color: '#b8a8d0', fontSize: '17px', lineHeight: '1.7', margin: '0 0 48px', fontFamily: 'Outfit, sans-serif', maxWidth: '640px' },
+
+  // HOW IT WORKS
+  howSection: { backgroundColor: '#f5f3ff', padding: '80px 0' },
+  cardsRow: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' },
+  cardWrap: { height: '320px', perspective: '1000px', cursor: 'pointer' },
+  cardInner: { position: 'relative', width: '100%', height: '100%', transformStyle: 'preserve-3d', transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)' },
+  cardFront: { position: 'absolute', width: '100%', height: '100%', backfaceVisibility: 'hidden', backgroundColor: '#ffffff', border: '1px solid rgba(45,27,78,0.1)', borderRadius: '16px', padding: '32px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 4px 24px rgba(0,0,0,0.08)' },
+  cardBack: { position: 'absolute', width: '100%', height: '100%', backfaceVisibility: 'hidden', backgroundColor: '#2D1B4E', borderRadius: '16px', padding: '28px', transform: 'rotateY(180deg)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', textAlign: 'center' },
+  cardNumber: { color: '#D4A843', fontSize: '36px', fontFamily: 'Cormorant Garamond, serif', fontWeight: '700' },
+  cardTitle: { color: '#2D1B4E', fontSize: '20px', fontFamily: 'Cormorant Garamond, serif', fontWeight: '700', margin: '8px 0' },
+  cardDesc: { color: '#6b7280', fontSize: '14px', lineHeight: '1.6', fontFamily: 'Outfit, sans-serif', flex: 1 },
+  cardHint: { color: '#D4A843', fontSize: '12px', fontFamily: 'Outfit, sans-serif', fontWeight: '600' },
+  cardCta: { backgroundColor: '#D4A843', color: '#2D1B4E', padding: '10px 24px', borderRadius: '8px', textDecoration: 'none', fontSize: '14px', fontWeight: '800', fontFamily: 'Outfit, sans-serif' },
+
+  // CARD BACK VISUALS
+  cardVisualChat: { width: '100%', display: 'flex', flexDirection: 'column', gap: '8px' },
+  chatBubbleAda: { backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '10px', padding: '10px 12px', textAlign: 'left' },
+  chatLabel: { color: '#D4A843', fontSize: '10px', fontWeight: '700', letterSpacing: '1px', display: 'block', marginBottom: '4px' },
+  chatText: { color: '#e8e0f0', fontSize: '12px', lineHeight: '1.5', margin: 0, fontFamily: 'Outfit, sans-serif' },
+  chatBubbleUser: { backgroundColor: '#D4A843', color: '#2D1B4E', borderRadius: '10px', padding: '8px 12px', fontSize: '12px', fontFamily: 'Outfit, sans-serif', alignSelf: 'flex-end', maxWidth: '80%' },
+  cardVisualLaw: { width: '100%', display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center' },
+  lawCitation: { backgroundColor: 'rgba(212,168,67,0.2)', border: '1px solid rgba(212,168,67,0.4)', borderRadius: '8px', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '8px' },
+  lawIcon: { color: '#D4A843', fontSize: '20px', fontFamily: 'Cormorant Garamond, serif' },
+  lawText: { color: '#D4A843', fontSize: '13px', fontWeight: '700', fontFamily: 'Outfit, sans-serif' },
+  lawExplain: { color: '#b8a8d0', fontSize: '13px', lineHeight: '1.5', fontFamily: 'Outfit, sans-serif', margin: 0 },
+  cardVisualAdvocate: { width: '100%', display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center' },
+  letterPreview: { backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: '8px', padding: '16px', width: '100%', display: 'flex', flexDirection: 'column', gap: '8px' },
+  letterLine: { height: '8px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '4px' },
+  letterLineSm: { height: '8px', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '4px', width: '60%' },
+  advocateText: { color: '#b8a8d0', fontSize: '13px', lineHeight: '1.5', fontFamily: 'Outfit, sans-serif', margin: 0 },
+
+  // MEET ADA
+  meetAda: { backgroundColor: '#2D1B4E', padding: '80px 0' },
+  meetAdaInner: { maxWidth: '1200px', margin: '0 auto', padding: '0 24px', display: 'flex', gap: '64px', alignItems: 'flex-start', flexWrap: 'wrap' },
+  meetAdaLeft: { display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '220px' },
+  meetAdaRing: { width: '160px', height: '160px', borderRadius: '50%', border: '4px solid #D4A843', position: 'relative', overflow: 'hidden', backgroundColor: '#1a0f2e', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', boxShadow: '0 0 40px rgba(212,168,67,0.3)' },
+  meetAdaImg: { width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', zIndex: 2 },
+  meetAdaInitial: { color: '#D4A843', fontSize: '32px', fontWeight: '800', fontFamily: 'Cormorant Garamond, serif', zIndex: 1 },
+  meetAdaName: { color: '#D4A843', fontSize: '28px', fontFamily: 'Cormorant Garamond, serif', fontWeight: '700', margin: '0 0 4px' },
+  meetAdaTitle: { color: '#b8a8d0', fontSize: '13px', fontFamily: 'Outfit, sans-serif', margin: '0 0 12px', textAlign: 'center' },
+  onlineBadge: { display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '20px', padding: '5px 12px', color: '#22c55e', fontSize: '12px', fontFamily: 'Outfit, sans-serif' },
+  onlineDot: { width: '7px', height: '7px', borderRadius: '50%', backgroundColor: '#22c55e' },
+  meetAdaRight: { flex: 1, minWidth: '300px' },
+  meetAdaEyebrow: { color: '#D4A843', fontSize: '11px', fontWeight: '700', letterSpacing: '3px', fontFamily: 'Outfit, sans-serif', marginBottom: '12px' },
+  meetAdaHeadline: { color: '#ffffff', fontSize: '36px', fontFamily: 'Cormorant Garamond, serif', fontWeight: '700', margin: '0 0 16px' },
+  meetAdaDesc: { color: '#b8a8d0', fontSize: '16px', lineHeight: '1.7', margin: '0 0 28px', fontFamily: 'Outfit, sans-serif' },
+  featuresList: { display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '28px' },
+  featureItem: { display: 'flex', gap: '12px', alignItems: 'flex-start' },
+  featureCheck: { color: '#D4A843', fontSize: '16px', fontWeight: '700', flexShrink: 0, marginTop: '1px' },
+  featureTitle: { color: '#e8e0f0', fontSize: '15px', fontWeight: '700', fontFamily: 'Outfit, sans-serif', margin: '0 0 4px' },
+  featureDesc: { color: '#b8a8d0', fontSize: '13px', lineHeight: '1.5', fontFamily: 'Outfit, sans-serif', margin: 0 },
+  meetAdaBtn: { display: 'inline-block', backgroundColor: '#D4A843', color: '#2D1B4E', padding: '13px 26px', borderRadius: '8px', textDecoration: 'none', fontSize: '15px', fontWeight: '800', fontFamily: 'Outfit, sans-serif' },
+
+  // PRICING
+  pricingSection: { backgroundColor: '#0f0a1a', padding: '80px 0' },
+  pricingRow: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', alignItems: 'start', marginTop: '48px' },
+
+  pricingCard: { backgroundColor: '#1a0f2e', border: '1px solid rgba(212,168,67,0.2)', borderRadius: '16px', padding: '32px 28px', display: 'flex', flexDirection: 'column', gap: '12px' },
+  pricingTier: { color: '#b8a8d0', fontSize: '11px', fontWeight: '700', letterSpacing: '2px', fontFamily: 'Outfit, sans-serif', margin: 0 },
+  pricingPrice: { color: '#ffffff', fontSize: '40px', fontFamily: 'Cormorant Garamond, serif', fontWeight: '700', margin: 0 },
+  pricingPriceSub: { color: '#b8a8d0', fontSize: '13px', fontFamily: 'Outfit, sans-serif', margin: 0 },
+  pricingDesc: { color: '#b8a8d0', fontSize: '14px', lineHeight: '1.6', fontFamily: 'Outfit, sans-serif', margin: 0 },
+  pricingBtnOutline: { display: 'block', backgroundColor: 'transparent', border: '1px solid rgba(212,168,67,0.5)', color: '#D4A843', padding: '12px', borderRadius: '8px', textDecoration: 'none', fontSize: '14px', fontWeight: '700', fontFamily: 'Outfit, sans-serif', textAlign: 'center', marginTop: '8px' },
+
+  pricingCardGold: { backgroundColor: '#D4A843', borderRadius: '16px', padding: '36px 28px', display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative', boxShadow: '0 20px 60px rgba(212,168,67,0.3)' },
+  mostPopularBadge: { backgroundColor: '#2D1B4E', color: '#D4A843', padding: '5px 14px', borderRadius: '20px', fontSize: '11px', fontWeight: '800', letterSpacing: '1px', fontFamily: 'Outfit, sans-serif', alignSelf: 'flex-start' },
+  pricingTierGold: { color: '#2D1B4E', fontSize: '22px', fontFamily: 'Cormorant Garamond, serif', fontWeight: '800', margin: 0 },
+  pricingPriceGold: { color: '#2D1B4E', fontSize: '48px', fontFamily: 'Cormorant Garamond, serif', fontWeight: '700', margin: 0 },
+  pricingPriceSubGold: { color: 'rgba(45,27,78,0.7)', fontSize: '13px', fontFamily: 'Outfit, sans-serif', margin: 0 },
+  pricingDescGold: { color: '#2D1B4E', fontSize: '14px', lineHeight: '1.6', fontFamily: 'Outfit, sans-serif', margin: 0 },
+  featureListGold: { listStyle: 'none', padding: 0, margin: '8px 0', display: 'flex', flexDirection: 'column', gap: '8px' },
+  featureListItem: { color: '#2D1B4E', fontSize: '14px', fontFamily: 'Outfit, sans-serif', display: 'flex', alignItems: 'flex-start', gap: '8px' },
+  featureListCheck: { fontWeight: '800', flexShrink: 0 },
+  pricingBtnGold: { display: 'block', backgroundColor: '#2D1B4E', color: '#D4A843', padding: '14px', borderRadius: '8px', textDecoration: 'none', fontSize: '15px', fontWeight: '800', fontFamily: 'Outfit, sans-serif', textAlign: 'center', marginTop: '8px' },
+
+  resourceList: { listStyle: 'none', padding: 0, margin: '4px 0', display: 'flex', flexDirection: 'column', gap: '8px' },
+  resourceListItem: { color: '#b8a8d0', fontSize: '13px', fontFamily: 'Outfit, sans-serif', display: 'flex', alignItems: 'flex-start', gap: '8px' },
+  resourceCheck: { color: '#D4A843', fontWeight: '700', flexShrink: 0 },
+
+  // OUR STORY
+  storySection: { backgroundColor: '#ffffff', padding: '80px 0' },
+  storyInner: { maxWidth: '1100px', margin: '0 auto', padding: '0 24px' },
+  storySectionTitle: { color: '#2D1B4E', fontSize: '40px', fontFamily: 'Cormorant Garamond, serif', fontWeight: '700', margin: '0 0 40px' },
+  photoGallery: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '48px' },
+  photoWrap: { borderRadius: '12px', overflow: 'hidden', aspectRatio: '4/3', backgroundColor: '#f3f4f6' },
+  photo: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' },
+  storyContent: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px', alignItems: 'start' },
+  storyText: { display: 'flex', flexDirection: 'column', gap: '16px' },
+  storyPara: { color: '#374151', fontSize: '16px', lineHeight: '1.8', fontFamily: 'Outfit, sans-serif', margin: 0 },
+  storyQuote: { borderLeft: '4px solid #D4A843', paddingLeft: '20px', margin: '8px 0', color: '#2D1B4E', fontSize: '16px', fontStyle: 'italic', lineHeight: '1.8', fontFamily: 'Cormorant Garamond, serif' },
+  closingQuoteWrap: { backgroundColor: '#2D1B4E', borderRadius: '16px', padding: '36px 32px' },
+  closingQuoteLine: { width: '48px', height: '3px', backgroundColor: '#D4A843', marginBottom: '20px' },
+  closingQuote: { color: '#e8e0f0', fontSize: '16px', lineHeight: '1.8', fontFamily: 'Cormorant Garamond, serif', fontStyle: 'italic', margin: '0 0 24px' },
+  closingAuthor: { display: 'flex', alignItems: 'center', gap: '12px' },
+  closingAvatar: { width: '44px', height: '44px', borderRadius: '50%', backgroundColor: '#D4A843', color: '#2D1B4E', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: '800', fontFamily: 'Cormorant Garamond, serif', flexShrink: 0 },
+  closingName: { color: '#D4A843', fontSize: '15px', fontWeight: '700', fontFamily: 'Outfit, sans-serif', margin: '0 0 2px' },
+  closingTitle: { color: '#b8a8d0', fontSize: '12px', fontFamily: 'Outfit, sans-serif', margin: 0 },
+
+  // EMAIL
+  emailSection: { backgroundColor: '#2D1B4E', padding: '80px 0' },
+  emailInner: { maxWidth: '640px', margin: '0 auto', padding: '0 24px', textAlign: 'center' },
+  emailTitle: { color: '#ffffff', fontSize: '36px', fontFamily: 'Cormorant Garamond, serif', fontWeight: '700', margin: '0 0 16px' },
+  emailSub: { color: '#b8a8d0', fontSize: '16px', lineHeight: '1.7', margin: '0 0 32px', fontFamily: 'Outfit, sans-serif' },
+  emailForm: { display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' },
+  emailInput: { flex: 1, minWidth: '240px', backgroundColor: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#ffffff', fontSize: '15px', padding: '13px 16px', fontFamily: 'Outfit, sans-serif', outline: 'none' },
+  emailBtn: { backgroundColor: '#D4A843', color: '#2D1B4E', border: 'none', borderRadius: '8px', padding: '13px 24px', fontSize: '15px', fontWeight: '800', fontFamily: 'Outfit, sans-serif', cursor: 'pointer', whiteSpace: 'nowrap' },
+  emailFine: { color: 'rgba(184,168,208,0.5)', fontSize: '12px', marginTop: '16px', fontFamily: 'Outfit, sans-serif' },
+  emailSuccess: { display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' },
+  emailSuccessText: { color: '#e8e0f0', fontSize: '18px', fontFamily: 'Outfit, sans-serif', margin: 0 },
+  emailCreateAccount: { display: 'inline-block', backgroundColor: '#D4A843', color: '#2D1B4E', padding: '12px 24px', borderRadius: '8px', textDecoration: 'none', fontSize: '15px', fontWeight: '800', fontFamily: 'Outfit, sans-serif' },
+
+  // FOOTER
+  footer: { backgroundColor: '#080512' },
+  footerInner: { maxWidth: '1200px', margin: '0 auto', padding: '56px 24px 32px', display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '40px', flexWrap: 'wrap' },
+  footerBrand: { display: 'flex', flexDirection: 'column', gap: '12px' },
+  footerLogo: { margin: 0, fontSize: '22px', fontFamily: 'Cormorant Garamond, serif', fontWeight: '700' },
+  footerLogoIEP: { color: '#D4A843' },
+  footerLogoApproved: { color: '#ffffff' },
+  footerTagline: { color: 'rgba(184,168,208,0.5)', fontSize: '13px', lineHeight: '1.6', fontFamily: 'Outfit, sans-serif', margin: 0 },
+  footerCol: { display: 'flex', flexDirection: 'column', gap: '12px' },
+  footerColTitle: { color: '#D4A843', fontSize: '11px', fontWeight: '700', letterSpacing: '2px', fontFamily: 'Outfit, sans-serif', margin: '0 0 4px' },
+  footerLink: { color: 'rgba(184,168,208,0.6)', textDecoration: 'none', fontSize: '14px', fontFamily: 'Outfit, sans-serif' },
+  footerDisclosure: { borderTop: '1px solid rgba(255,255,255,0.06)', padding: '24px', textAlign: 'center' },
+  footerDisclosureText: { color: 'rgba(184,168,208,0.3)', fontSize: '12px', lineHeight: '1.6', fontFamily: 'Outfit, sans-serif', maxWidth: '800px', margin: '0 auto 8px' },
+  footerCopy: { color: 'rgba(184,168,208,0.2)', fontSize: '11px', fontFamily: 'Outfit, sans-serif', margin: 0 },
+};
