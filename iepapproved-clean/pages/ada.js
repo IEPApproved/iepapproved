@@ -447,14 +447,9 @@ export default function AdaPage() {
               <Link href="/contact" style={s.navLink}>Contact</Link>
 
               {/* ── UNLIMITED BADGE ── */}
-              {isUnlimited && profile?.state && (
-                <span style={s.unlimitedStateBadge}>
-                  ✦ {profile.state} Unlimited
-                </span>
-              )}
-              {isUnlimited && !profile?.state && (
-                <span style={s.unlimitedStateBadge}>✦ Unlimited</span>
-              )}
+              {isUnlimited && (
+  <span style={s.unlimitedStateBadge}>✦ Unlimited</span>
+)}
 
               {/* Question counter — free/guest only */}
               {!isUnlimited && (
@@ -518,9 +513,9 @@ export default function AdaPage() {
                 </span>
               </div>
               {/* Mobile unlimited badge */}
-              {isUnlimited && (
-                <div style={s.mobileUnlimitedBadge}>✦ {profile?.state ? `${profile.state} Unlimited` : 'Unlimited'}</div>
-              )}
+             {isUnlimited && (
+  <div style={s.mobileUnlimitedBadge}>✦ Unlimited</div>
+)}
             </div>
           </div>
           <div style={s.mobileAudioRow}>
@@ -553,13 +548,18 @@ export default function AdaPage() {
               <div style={s.userInfoPanel}>
                 <div style={s.userInfoName}>{displayName || user.email}</div>
                 {isUnlimited ? (
-                  <div style={s.userInfoTier}>✦ Ada Unlimited · Active</div>
-                ) : (
-                  <div style={s.userInfoTierFree}>{questionsLeft} questions left this month</div>
-                )}
-                {isUnlimited && profile?.state && (
-                  <div style={s.userInfoState}>📍 {profile.state}</div>
-                )}
+  <>
+    <div style={s.userInfoTier}>✦ Ada Unlimited · Active</div>
+    <div style={s.userInfoStateNote}>
+      {profile?.state
+        ? `Ask Ada about ${profile.state} law or any state — just ask.`
+        : 'Ask Ada about any state law — just ask.'
+      }
+    </div>
+  </>
+) : (
+  <div style={s.userInfoTierFree}>{questionsLeft} questions left this month</div>
+)}
               </div>
             )}
 
