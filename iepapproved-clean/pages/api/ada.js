@@ -1,70 +1,172 @@
-import Anthropic from '@anthropic-ai/sdk'
+// pages/api/ada.js  ← REPLACE your existing file with this
+// Now tier-aware: unlimited users get state-specific context
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+import { createServerClient, createAdminClient } from '../../lib/supabase'
 
-const SYSTEM_PROMPT = `You are Ada, an AI guide specializing in federal special education law for parents of children with disabilities. You work for IEP Approved (iepapproved.com), founded by Kimberly Sandro, a special needs parent and advocate.
+const BASE_SYSTEM_PROMPT_EN = `You are Ada, an AI IEP advocate created by IEP Approved. You help parents, caregivers, and families navigate the special education system with confidence and clarity.
 
-YOUR EXPERTISE:
-- IDEA (Individuals with Disabilities Education Act) — 20 U.S.C. § 1400 et seq.
-- ADA (Americans with Disabilities Act) — 42 U.S.C. § 12101 et seq.
-- Section 504 of the Rehabilitation Act — 29 U.S.C. § 794
-- FERPA (Family Educational Rights and Privacy Act)
-- IEP process, timelines, and procedural safeguards
+You have deep knowledge of:
+- The Individuals with Disabilities Education Act (IDEA) and its requirements
+- Section 504 of the Rehabilitation Act
+- Americans with Disabilities Act (ADA) in educational contexts
+- IEP process: evaluations, eligibility, IEP meetings, services, placement
+- Parent rights and procedural safeguards
+- Dispute resolution: mediation, due process, state complaints
 
-YOUR VOICE:
-- Warm, clear, and empowering — like a knowledgeable friend who happens to know the law
-- Plain English first, legal citation second
-- Never condescending. Parents are smart; they just need the information
-- When a question is complex or high-stakes, acknowledge it and suggest consulting a special education attorney
+IMPORTANT GUIDELINES:
+- Always be warm, empathetic, and encouraging — you know how overwhelming this process feels
+- Provide clear, actionable information in plain language
+- Always clarify you provide information, not legal advice
+- If a parent seems distressed, acknowledge their feelings first
+- Recommend consulting a special education attorney or advocate for complex disputes
+- Use The Know Me Method™ principles: Know your child, Know your rights, Know your team
 
-HOW YOU ANSWER:
-1. Give a direct answer to the question first
-2. Cite the specific law (statute section, CFR regulation) that applies
-3. Explain what it means practically for the parent
-4. If relevant, mention what the parent can do next
-5. End with the legal disclaimer ONLY on first message or when giving complex legal analysis
+Respond in the language the user writes in. Be thorough but conversational.`
 
-FORMAT:
-- Use paragraph breaks for readability
-- Bold key legal terms and statute citations
-- Keep responses focused — don't overwhelm with every possible law if one applies clearly
-- Use "📖" before statute citations to make them easy to spot
+const BASE_SYSTEM_PROMPT_ES = `Eres Ada, una defensora de IEP con IA creada por IEP Approved. Ayudas a padres, cuidadores y familias a navegar el sistema de educación especial con confianza y claridad.
 
-CRITICAL LIMITS:
-- You provide legal INFORMATION, not legal ADVICE
-- You do not represent or guarantee outcomes
-- For due process hearings, lawsuits, or complex disputes, always recommend consulting a special education attorney or advocate
-- You cover FEDERAL law only at this time. If asked about a specific state's laws, explain you cover federal law and that state laws vary — encourage them to consult a local advocate
+Tienes conocimiento profundo de:
+- La Ley de Educación para Individuos con Discapacidades (IDEA) y sus requisitos
+- Sección 504 de la Ley de Rehabilitación
+- ADA en contextos educativos
+- El proceso de IEP: evaluaciones, elegibilidad, reuniones, servicios, colocación
+- Derechos de los padres y salvaguardias procedimentales
+- Resolución de disputas: mediación, proceso debido, quejas estatales
 
-NEVER:
-- Make up statutes or case law
-- Guarantee outcomes
-- Tell parents to "just comply" with the school without explaining their rights
-- Be dismissive of their concerns`
+DIRECTRICES IMPORTANTES:
+- Sé siempre cálida, empática y alentadora
+- Proporciona información clara y procesable en lenguaje sencillo
+- Siempre aclara que proporcionas información, no asesoramiento legal
+- Recomienda consultar a un abogado de educación especial para disputas complejas
+
+Responde en el idioma en que escribe el usuario.`
+
+const FREE_DAILY_LIMIT = 3
+
+async function getStateContext(userState) {
+  if (!userState) return ''
+  const supabase = createAdminClient()
+  const { data } = await supabase
+    .from('state_content')
+    .select('*')
+    .or(`state_name.ilike.${userState},state_code.ilike.${userState}`)
+    .single()
+
+  if (!data) return ''
+
+  let ctx = `\n\n--- STATE-SPECIFIC: ${data.state_name.toUpperCase()} ---\n`
+  if (data.complaint_procedures) ctx += `\nCOMPLAINT PROCEDURES:\n${data.complaint_procedures}\n`
+  if (data.pti_centers?.length) {
+    ctx += `\nPTI CENTERS:\n`
+    data.pti_centers.forEach(c => { ctx += `- ${c.name}: ${c.contact || ''} ${c.website || ''}\n` })
+  }
+  if (data.advocacy_orgs?.length) {
+    ctx += `\nADVOCACY ORGS:\n`
+    data.advocacy_orgs.forEach(o => { ctx += `- ${o.name}: ${o.description || ''} ${o.contact || ''}\n` })
+  }
+  if (data.additional_context) ctx += `\nADDITIONAL CONTEXT:\n${data.additional_context}\n`
+  ctx += `\n--- END STATE INFO ---\nWhen relevant, share ${data.state_name}-specific resources proactively.`
+  return ctx
+}
+
+async function checkAndTrackUsage(userId, supabase) {
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('questions_used_today, questions_reset_at, tier')
+    .eq('id', userId)
+    .single()
+
+  if (!profile) return { allowed: false }
+  if (profile.tier === 'unlimited') return { allowed: true }
+
+  const now = new Date()
+  const resetAt = new Date(profile.questions_reset_at)
+  const hoursSince = (now - resetAt) / (1000 * 60 * 60)
+
+  let used = profile.questions_used_today
+  if (hoursSince >= 24) {
+    used = 0
+    await supabase.from('profiles').update({ questions_used_today: 0, questions_reset_at: now.toISOString() }).eq('id', userId)
+  }
+
+  if (used >= FREE_DAILY_LIMIT) return { allowed: false, reason: 'daily_limit' }
+
+  await supabase.from('profiles').update({ questions_used_today: used + 1 }).eq('id', userId)
+  return { allowed: true, remaining: FREE_DAILY_LIMIT - used - 1 }
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { messages } = req.body
-  if (!messages || !Array.isArray(messages)) return res.status(400).json({ error: 'Invalid messages' })
-
-  // Convert messages to Anthropic format, filter out system messages
-  const formattedMessages = messages
-    .filter(m => m.role === 'user' || m.role === 'assistant')
-    .map(m => ({ role: m.role, content: m.content }))
-
   try {
-    const response = await client.messages.create({
-      model: 'claude-opus-4-5',
-      max_tokens: 1024,
-      system: SYSTEM_PROMPT,
-      messages: formattedMessages
+    const { messages, lang = 'en' } = req.body
+
+    // Get user from session
+    const supabase = createServerClient(req, res)
+    const { data: { user } } = await supabase.auth.getUser()
+
+    let systemPrompt = lang === 'es' ? BASE_SYSTEM_PROMPT_ES : BASE_SYSTEM_PROMPT_EN
+    let userTier = 'guest'
+
+    if (user) {
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+      userTier = profile?.tier || 'free'
+
+      // Check limits
+      const usage = await checkAndTrackUsage(user.id, supabase)
+      if (!usage.allowed) {
+        return res.status(429).json({
+          error: 'daily_limit',
+          upgrade: true,
+          message: lang === 'es'
+            ? 'Has alcanzado tu límite diario. Actualiza a Ada Sin Límites para conversaciones ilimitadas.'
+            : 'You\'ve reached your daily limit. Upgrade to Ada Unlimited for unlimited conversations.',
+        })
+      }
+
+      // State context for unlimited users
+      if (userTier === 'unlimited' && profile?.state) {
+        systemPrompt += await getStateContext(profile.state)
+        systemPrompt += `\n\nThis user is Ada Unlimited from ${profile.state}. Provide state resources when relevant.`
+      }
+
+      systemPrompt += `\nUser language preference: ${profile?.language_preference || lang}`
+    } else {
+      systemPrompt += '\n\nThis is a guest user. Provide federal law information only. Gently mention they can sign up free to track questions and upgrade for state-specific help.'
+    }
+
+    // Call Anthropic API
+    const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-5',
+        max_tokens: 1024,
+        system: systemPrompt,
+        messages,
+      }),
     })
 
-    const content = response.content[0]?.text || "I'm sorry, I couldn't generate a response. Please try again."
-    res.status(200).json({ content })
-  } catch (error) {
-    console.error('Anthropic API error:', error)
-    res.status(500).json({ content: "I'm having trouble connecting right now. Please try again in a moment." })
+    if (!anthropicRes.ok) {
+      const errText = await anthropicRes.text()
+      throw new Error(`Anthropic error: ${errText}`)
+    }
+
+    const data = await anthropicRes.json()
+    const content = data.content?.[0]
+
+    if (!content || content.type !== 'text') {
+      throw new Error('Unexpected Anthropic response')
+    }
+
+    return res.status(200).json({ message: content.text, tier: userTier })
+
+  } catch (err) {
+    console.error('Ada API error:', err)
+    return res.status(500).json({ error: 'Internal server error' })
   }
 }
