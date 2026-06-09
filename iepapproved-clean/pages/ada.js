@@ -535,7 +535,7 @@ export default function AdaPage() {
               <span style={s.mobileAvatarInit}>A</span>
             </div>
             <div>
-              <div style={s.mobileAdaName}>Ada</div>
+              <div style={s.mobileAdaName}>{displayName ? displayName : 'Ada'}</div>
               <div style={s.mobileStatus}>
                 <span style={{...s.statusDot, backgroundColor: isThinking?'#f59e0b':isSpeaking?'#D4A843':'#22c55e'}} />
                 <span style={s.statusText}>
@@ -579,11 +579,11 @@ export default function AdaPage() {
                 <div style={s.userInfoName}>{displayName || user.email}</div>
                 {isUnlimited ? (
   <>
-    <div style={s.userInfoTier}>✦ Ada Unlimited · Active</div>
+    <div style={s.userInfoTier}>❖ Unlimited</div>
     <div style={s.userInfoStateNote}>
       {profile?.state
-        ? `Ask Ada about ${profile.state} law or any state — just ask.`
-        : 'Ask Ada about any state law — just ask.'
+        ? `❖ ${profile.state} · Unlimited`
+        : '❖ All states · Unlimited'
       }
     </div>
   </>
@@ -833,7 +833,7 @@ const s = {
   adaInitials:{color:'#D4A843',fontSize:'20px',fontWeight:'800',fontFamily:'Cormorant Garamond,serif',letterSpacing:'2px',zIndex:1,display:'none'},
   adaName:{color:'#D4A843',fontSize:'20px',fontFamily:'Cormorant Garamond,serif',fontWeight:'700',margin:0},
   adaSubtitle:{color:'#b8a8d0',fontSize:'11px',textAlign:'center',margin:0,lineHeight:'1.4'},
-  userInfoPanel:{width:'100%',backgroundColor:'rgba(212,168,67,0.06)',border:'1px solid rgba(212,168,67,0.2)',borderRadius:'10px',padding:'10px 12px',textAlign:'center'},
+  userInfoPanel:{width:'100%',backgroundColor:'rgba(45,27,78,0.6)',border:'2px solid #D4A843',borderRadius:'10px',padding:'10px 12px',textAlign:'center'},
   userInfoName:{color:'#e8e0f0',fontSize:'13px',fontWeight:'700',fontFamily:'Outfit,sans-serif',marginBottom:'3px'},
   userInfoTier:{color:'#D4A843',fontSize:'11px',fontWeight:'700',fontFamily:'Outfit,sans-serif'},
   userInfoTierFree:{color:'#b8a8d0',fontSize:'11px',fontFamily:'Outfit,sans-serif'},
