@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import { createClient } from '../lib/supabase'
+import Nav from '../components/Nav'
 
 const translations = {
   en: {
@@ -178,6 +179,8 @@ export default function LoginPage() {
   }
 
   return (
+    <>
+    <Nav />
     <div style={pageStyle}>
       <div style={{ width: '100%', maxWidth: '440px' }}>
 
@@ -273,6 +276,7 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+    </>
   )
 }
 
