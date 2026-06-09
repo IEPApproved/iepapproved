@@ -4,7 +4,7 @@ import { useRouter } from 'next/router'
 import { useAuth } from '../context/AuthContext'
 import { createClient } from '../lib/supabase'
 
-const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'kimberly@iepapproved.com'
+const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'kimberly.sandro@iepapproved.com'
 
 const US_STATES = [
   'Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut',
