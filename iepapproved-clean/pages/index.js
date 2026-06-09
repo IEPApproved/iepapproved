@@ -12,6 +12,7 @@ import { useLanguage } from '../context/LanguageContext';
 export default function HomePage() {
   const { lang } = useLanguage();
   const [email, setEmail] = useState('');
+  const [emailName, setEmailName] = useState('');
   const [emailSubmitted, setEmailSubmitted] = useState(false);
   const [flippedCard, setFlippedCard] = useState(null);
   const [mounted, setMounted] = useState(false);
@@ -25,7 +26,7 @@ export default function HomePage() {
       await fetch('/api/email-signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, source: 'homepage', lang }),
+        body: JSON.stringify({ email, name: emailName, source: 'homepage', lang }),
       });
       setEmailSubmitted(true);
     } catch (err) { console.error(err); }
@@ -348,6 +349,8 @@ export default function HomePage() {
           <p style={s.emailSub}>{es ? 'Monitoreamos la ley federal de educación especial y te enviamos alertas cuando algo cambia.' : 'We monitor federal special education law and send you alerts when something changes.'}</p>
           {!emailSubmitted ? (
             <form onSubmit={handleEmailSubmit} style={s.emailForm}>
+              <input type="text" value={emailName} onChange={e => setEmailName(e.target.value)}
+                placeholder={es ? 'Tu nombre' : 'Your name'} style={{...s.emailInput, marginBottom:'8px'}} />
               <input type="email" value={email} onChange={e => setEmail(e.target.value)}
                 placeholder={es ? 'tu@correo.com' : 'your@email.com'} style={s.emailInput} required />
               <button type="submit" style={s.emailBtn}>{es ? 'Unirse a la Comunidad' : 'Join the Community'}</button>
