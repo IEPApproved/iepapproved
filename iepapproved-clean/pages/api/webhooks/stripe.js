@@ -173,16 +173,21 @@ export default async function handler(req, res) {
           break
         }
 
+        // Upsert so this works even if the profile row doesn't exist yet
+        // (e.g. user paid before creating an account)
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .update({
-            tier: 'unlimited',
-            stripe_customer_id: customerId,
-            stripe_subscription_id: subscriptionId,
-            subscription_status: 'active',
-            updated_at: new Date().toISOString(),
-          })
-          .eq('email', customerEmail)
+          .upsert(
+            {
+              email: customerEmail,
+              tier: 'unlimited',
+              stripe_customer_id: customerId,
+              stripe_subscription_id: subscriptionId,
+              subscription_status: 'active',
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: 'email' }
+          )
           .select()
           .single()
 
