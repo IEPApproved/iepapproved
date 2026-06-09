@@ -10,6 +10,7 @@ export default function CommunityPage() {
   const { lang } = useLanguage();
   const es = lang === 'es';
   const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -18,7 +19,7 @@ export default function CommunityPage() {
       await fetch('/api/email-signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, source: 'community', lang }),
+        body: JSON.stringify({ email, name, source: 'community', lang }),
       });
       setSubmitted(true);
     } catch (err) { console.error(err); }
@@ -47,6 +48,9 @@ export default function CommunityPage() {
 
           {!submitted ? (
             <form onSubmit={handleSubmit} style={s.form}>
+              <input type="text" value={name} onChange={e => setName(e.target.value)}
+                placeholder={es ? 'Tu nombre' : 'Your name'}
+                style={{...s.input, marginBottom:'8px'}} />
               <input type="email" value={email} onChange={e => setEmail(e.target.value)}
                 placeholder={es ? 'Tu correo electrónico' : 'Your email address'}
                 style={s.input} required />
