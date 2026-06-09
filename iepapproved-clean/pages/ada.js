@@ -41,6 +41,31 @@ function cleanForElevenLabs(text, lang = 'en') {
   return cleaned.trim().substring(0, 2500);
 }
 
+// Bug Fix #2: Strip markdown syntax from Ada responses for display.
+// Claude returns **bold**, ## headers, - bullets which render as raw symbols.
+// This converts them to clean readable plain text.
+function stripMarkdown(text) {
+  if (!text) return text;
+  let t = text;
+  // Headers: ## Heading → uppercase for visual weight without symbols
+  t = t.replace(/^#{1,6}\s+(.+)$/gm, (_, h) => h.toUpperCase());
+  // Bold+italic, bold, italic
+  t = t.replace(/\*\*\*(.*?)\*\*\*/g, '$1');
+  t = t.replace(/\*\*(.*?)\*\*/g, '$1');
+  t = t.replace(/\*(.*?)\*/g, '$1');
+  // Inline code
+  t = t.replace(/`([^`]+)`/g, '$1');
+  // Bullet points — replace - / * with em-dash for clean look
+  t = t.replace(/^[\-\*]\s+/gm, '— ');
+  // Blockquotes
+  t = t.replace(/^>\s+/gm, '');
+  // Horizontal rules
+  t = t.replace(/^[\-\*_]{3,}\s*$/gm, '');
+  // Collapse 3+ blank lines to 2
+  t = t.replace(/\n{3,}/g, '\n\n');
+  return t.trim();
+}
+
 export default function AdaPage() {
   const { lang, toggleLang } = useLanguage();
   const { user, profile, loading: authLoading } = useAuth();
@@ -596,7 +621,7 @@ export default function AdaPage() {
             {messages.map((msg, i) => (
               <div key={i} style={msg.role==='user' ? s.userBubble : s.adaBubble}>
                 {msg.role === 'assistant' && <span style={s.adaLabel}>Ada</span>}
-                <p style={s.msgText}>{msg.content}</p>
+                <p style={s.msgText}>{msg.role === 'assistant' ? stripMarkdown(msg.content) : msg.content}</p>
               </div>
             ))}
             {isThinking && (
