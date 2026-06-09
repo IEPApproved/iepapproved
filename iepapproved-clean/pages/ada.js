@@ -146,7 +146,6 @@ export default function AdaPage() {
     lastSpokenTextRef.current = text;
     const cleaned = cleanForElevenLabs(text, speakLang || lang);
     try {
-      setIsSpeaking(true);
       setIsPaused(false);
       setAudioProgress(0);
       const response = await fetch('/api/speak', {
@@ -161,6 +160,8 @@ export default function AdaPage() {
       const audio = new Audio(url);
       audio.volume = volume;
       audioRef.current = audio;
+      // ✓ audioRef assigned — Pause button is now safe to call togglePause
+      setIsSpeaking(true);
       audio.addEventListener('loadedmetadata', () => setAudioDuration(audio.duration));
       audio.addEventListener('ended', () => {
         setIsSpeaking(false);
@@ -213,14 +214,20 @@ export default function AdaPage() {
   const togglePause = () => {
     if (!audioRef.current) return;
     if (isPaused) {
-      audioRef.current.play();
-      setIsPaused(false);
-      progressIntervalRef.current = setInterval(() => {
-        if (audioRef.current) {
-          const pct = (audioRef.current.currentTime / audioRef.current.duration) * 100;
-          setAudioProgress(isNaN(pct) ? 0 : pct);
-        }
-      }, 200);
+      audioRef.current.play().then(() => {
+        setIsPaused(false);
+        progressIntervalRef.current = setInterval(() => {
+          if (audioRef.current) {
+            const pct = (audioRef.current.currentTime / audioRef.current.duration) * 100;
+            setAudioProgress(isNaN(pct) ? 0 : pct);
+          }
+        }, 200);
+      }).catch(() => {
+        setIsSpeaking(false);
+        setIsPaused(false);
+        setAudioProgress(0);
+        audioRef.current = null;
+      });
     } else {
       audioRef.current.pause();
       setIsPaused(true);
@@ -373,21 +380,18 @@ export default function AdaPage() {
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
-  const PlayPauseBtn = ({ style }) => {
-    if (isSpeaking) {
-      return (
-        <button onClick={togglePause} style={style || s.audioBtn}>
-          {isPaused ? '▶ Play' : '⏸ Pause'}
-        </button>
-      );
-    }
-    return (
-      <button onClick={() => lastSpokenTextRef.current && speakText(lastSpokenTextRef.current, lang)}
-        style={style || s.audioBtn} disabled={!lastSpokenTextRef.current}>
-        ▶ Play
-      </button>
-    );
-  };
+  // Rendered as a plain function call (not a JSX component) to avoid
+  // remount/stale-closure issues from redefining a component type each render.
+  const renderPlayPauseBtn = (style) => isSpeaking ? (
+    <button onClick={togglePause} style={style || s.audioBtn}>
+      {isPaused ? '▶ Play' : '⏸ Pause'}
+    </button>
+  ) : (
+    <button onClick={() => lastSpokenTextRef.current && speakText(lastSpokenTextRef.current, lang)}
+      style={style || s.audioBtn} disabled={!lastSpokenTextRef.current}>
+      ▶ Play
+    </button>
+  );
 
   const SettingsPanel = () => (
     <div style={s.settingsPanel}>
@@ -519,7 +523,7 @@ export default function AdaPage() {
             </div>
           </div>
           <div style={s.mobileAudioRow}>
-            <PlayPauseBtn style={s.mobileAudioBtn} />
+            {renderPlayPauseBtn(s.mobileAudioBtn)}
             {isSpeaking && (
               <button onClick={stopAudio} style={s.mobileStopBtn}>⏹</button>
             )}
@@ -569,7 +573,7 @@ export default function AdaPage() {
             </div>
             <div style={s.audioControls}>
               <div style={s.audioRow}>
-                <PlayPauseBtn />
+                {renderPlayPauseBtn()}
                 {isSpeaking && <button onClick={stopAudio} style={s.stopBtn}>⏹ Stop</button>}
               </div>
               <SettingsPanel />
