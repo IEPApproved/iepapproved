@@ -6,6 +6,7 @@ import Head from 'next/head'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '../context/AuthContext'
+import Nav from '../components/Nav'
 
 const ADA_UNLIMITED_PRICE_ID = 'price_1TfOauPsMEtDZUDk1o4Vcy1c'
 
@@ -62,6 +63,8 @@ export default function Signup() {
   // Already unlimited — show redirect message briefly
   if (profile?.tier === 'unlimited') {
     return (
+      <>
+      <Nav />
       <div style={{ minHeight: '100vh', background: '#F3F0FA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Outfit, sans-serif' }}>
         <div style={{ textAlign: 'center', color: '#2D1B4E' }}>
           <div style={{ fontSize: '48px', marginBottom: '16px' }}>✦</div>
@@ -69,11 +72,13 @@ export default function Signup() {
           <p style={{ color: '#7A6E8E', marginTop: '8px' }}>Redirecting you to Ada...</p>
         </div>
       </div>
+      </>
     )
   }
 
-  return (
+  return (  return (
     <>
+      <Nav />
       <Head>
         <title>Ada Unlimited — IEP Approved</title>
         <meta name="description" content="Unlimited access to Ada, your IEP law guide." />
