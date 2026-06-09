@@ -84,6 +84,7 @@ export default function AdaPage() {
   const [questionCount, setQuestionCount] = useState(0);
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [limitEmail, setLimitEmail] = useState('');
+  const [limitName, setLimitName] = useState('');
   const [limitEmailSent, setLimitEmailSent] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -387,7 +388,7 @@ export default function AdaPage() {
       await fetch('/api/email-signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: limitEmail, source: 'ada_limit' }),
+        body: JSON.stringify({ email: limitEmail, name: limitName, source: 'ada_limit' }),
       });
       setLimitEmailSent(true);
       setTimeout(() => {
@@ -736,6 +737,9 @@ export default function AdaPage() {
                 <p style={s.modalFreeLabel}>
                   {lang==='es' ? 'Regístrate gratis — 10 preguntas/mes' : 'Sign up free — 10 questions/month'}
                 </p>
+                <input type="text" value={limitName} onChange={e=>setLimitName(e.target.value)}
+                  placeholder={lang==='es'?'Tu nombre':'Your name'}
+                  style={s.modalInput} />
                 <input type="email" value={limitEmail} onChange={e=>setLimitEmail(e.target.value)}
                   placeholder={lang==='es'?'Tu correo electrónico':'Your email address'}
                   style={s.modalInput} required />
@@ -744,7 +748,13 @@ export default function AdaPage() {
                 </button>
               </form>
             ) : !user && limitEmailSent ? (
-              <p style={s.modalSuccess}>✅ {lang==='es'?'¡Listo! Redirigiendo...':'Done! Redirecting...'}</p>
+              <div style={{textAlign:'center'}}>
+                <p style={s.modalSuccess}>✅ {lang==='es'?'¡Revisa tu correo!':'Check your email!'}</p>
+                <p style={{color:'#b8a8d0',fontSize:'13px',margin:'8px 0 12px'}}>{lang==='es'?'Crea tu cuenta para guardar tu progreso:':'Create your account to save your progress:'}</p>
+                <Link href={'/login?mode=signup&email=' + encodeURIComponent(limitEmail)} style={{display:'block',backgroundColor:'#D4A843',color:'#2D1B4E',padding:'10px 20px',borderRadius:'8px',textDecoration:'none',fontSize:'14px',fontWeight:'800',fontFamily:'Outfit,sans-serif'}}>
+                  {lang==='es' ? 'Crear Cuenta Gratis →' : 'Create Free Account →'}
+                </Link>
+              </div>
             ) : (
               <div style={{ textAlign:'center' }}>
                 <p style={{ color:'#b8a8d0', fontSize:'14px', marginBottom:'12px' }}>
