@@ -4,7 +4,12 @@ import { useRouter } from 'next/router'
 import { useAuth } from '../context/AuthContext'
 import { createClient } from '../lib/supabase'
 
-const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'kimberly.sandro@iepapproved.com'
+const ADMIN_EMAILS = [
+  process.env.NEXT_PUBLIC_ADMIN_EMAIL,
+  'kimberly.sandro@iepapproved.com',
+  'info@iepapproved.com',
+].filter(Boolean)
+const isAdmin = (email) => ADMIN_EMAILS.includes(email)
 
 const US_STATES = [
   'Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut',
@@ -47,13 +52,13 @@ export default function AdminDashboard() {
 
   // Auth guard
   useEffect(() => {
-    if (!loading && (!user || user.email !== ADMIN_EMAIL)) {
+    if (!loading && (!user || !isAdmin(user.email))) {
       router.replace('/')
     }
   }, [user, loading])
 
   useEffect(() => {
-    if (user?.email === ADMIN_EMAIL) loadData()
+    if (user?.email && isAdmin(user.email)) loadData()
   }, [user])
 
   const loadData = async () => {
@@ -122,7 +127,7 @@ export default function AdminDashboard() {
     )
   }
 
-  if (user.email !== ADMIN_EMAIL) return null
+  if (!isAdmin(user.email)) return null
 
   const mrr = (stats.unlimited * 4.99).toFixed(2)
 
