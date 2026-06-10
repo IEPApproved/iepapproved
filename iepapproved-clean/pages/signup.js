@@ -76,7 +76,7 @@ export default function Signup() {
     )
   }
 
-  return (  return (
+  return (
     <>
       <Nav />
       <Head>
