@@ -37,6 +37,8 @@ function cleanForElevenLabs(text, lang = 'en') {
     cleaned = cleaned.replace(/\b504\b/g, 'quinientos cuatro');
   }
   cleaned = cleaned.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}]/gu, '');
+// Strip trailing Sources section so it is never read aloud
+cleaned = cleaned.replace(/Sources:[\s\S]*$/i, '');
 cleaned = cleaned.replace(/https?:\/\/\S+/g, '');
   cleaned = cleaned.replace(/  +/g, ' ');
   return cleaned.trim().substring(0, 2500);
