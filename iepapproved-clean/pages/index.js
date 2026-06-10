@@ -123,7 +123,7 @@ export default function HomePage() {
     <>
       <Head>
         <title>IEP Approved — Know the Law. Advocate with Confidence.</title>
-        <meta name="description" content="Ada is your AI-powered guide to the IEP process, IDEA, ADA, and Section 504. Free to start. Bilingual. Built for every family." />
+        <meta name="description" content="Ada is your AI guide to disability rights — IEPs, 504 plans, early intervention, and programs from birth through adulthood. Plain language. Bilingual. Free to start." />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
       <Nav />
@@ -132,17 +132,17 @@ export default function HomePage() {
       <section style={s.hero}>
         <div style={s.heroInner}>
           <div style={s.heroLeft}>
-            <div style={s.heroBadge}>{es ? 'PARA FAMILIAS CON NECESIDADES ESPECIALES' : 'FOR SPECIAL NEEDS FAMILIES'}</div>
+            <div style={s.heroBadge}>{es ? 'PARA FAMILIAS QUE NAVEGAN LA DISCAPACIDAD' : 'FOR FAMILIES NAVIGATING DISABILITY'}</div>
             <h1 style={s.heroHeadline}>
               {es
-                ? <>El conocimiento es poder. La colaboración es progreso. Juntos — el IEP se <em style={s.heroGold}>APRUEBA.</em></>
-                : <>Knowledge is power. Partnership is progress. Together — the IEP gets <em style={s.heroGold}>APPROVED.</em></>
+                ? <>El conocimiento es poder. La colaboración es progreso. Juntos — convertimos derechos en <em style={s.heroGold}>REALIDAD.</em></>
+                : <>Knowledge is power. Partnership is progress. Together — we turn rights into <em style={s.heroGold}>REALITY.</em></>
               }
             </h1>
             <p style={s.heroSub}>
               {es
-                ? 'Ada es tu guía impulsada por IA para el proceso del IEP, IDEA, la ADA y la Sección 504 — brindándote respuestas en lenguaje claro respaldadas por la ley federal real, para que puedas comunicarte con confianza y colaborar con el equipo de tu hijo.'
-                : 'Ada is your AI-powered guide to the IEP process, IDEA, ADA, and Section 504 — giving you plain language answers backed by real federal law, so you can communicate with confidence and collaborate with your child\'s team.'
+                ? "¿Diagnóstico nuevo? ¿Dificultades en la escuela? ¿La sensación de que tu hijo necesita más ayuda de la que recibe? No necesitas conocer las siglas — Ada te encuentra donde estás. Desde Intervención Temprana y Head Start hasta el aula, los servicios en el hogar y la transición a la adultez — Ada explica los derechos de tu familia y los programas creados para ayudar, en lenguaje claro y respaldado por la ley real. Y con Ada Unlimited, ella nunca deja de responder."
+                : "New diagnosis? School struggles? A feeling that your child needs more help than they're getting? You don't need to know the acronyms — Ada meets you where you are. From Early Intervention and Head Start to the classroom, in-home services, and the transition to adulthood — Ada explains your family's rights and the programs built to help, in plain language, backed by real law. And with Ada Unlimited, she never stops answering."
               }
             </p>
             <div style={s.heroBtns}>
@@ -237,8 +237,8 @@ export default function HomePage() {
           </div>
           <div style={s.meetAdaRight}>
             <p style={s.meetAdaEyebrow}>{es ? 'CONOCE A ADA' : 'MEET ADA'}</p>
-            <h2 style={s.meetAdaHeadline}>{es ? 'Tu guía de IA para el derecho del IEP.' : 'Your AI guide to IEP law.'}</h2>
-            <p style={s.meetAdaDesc}>{es ? 'Ada conoce IDEA, la ADA y la Sección 504 — y está aquí para ayudarte a entender los derechos de tu hijo en cada paso del camino.' : "Ada knows IDEA, ADA, and Section 504 — and she's here to help you understand your child's rights, every step of the way."}</p>
+            <h2 style={s.meetAdaHeadline}>{es ? 'Tu guía de IA para los derechos de discapacidad.' : 'Your AI guide to disability rights.'}</h2>
+            <p style={s.meetAdaDesc}>{es ? "Ada conoce las leyes que protegen a tu familia — IDEA (el derecho de tu hijo a servicios escolares), la Sección 504 (adaptaciones — incluso para condiciones temporales o episódicas como una lesión, un período de recuperación o una enfermedad crónica que va y viene) y la ADA (derechos de discapacidad en todos los demás ámbitos) — y te las explica como una amiga de confianza, no como abogada." : "Ada knows the laws that protect your family — IDEA (your child's right to school services), Section 504 (accommodations — including for temporary or episodic conditions like an injury, a recovery period, or a chronic illness that comes and goes), and the ADA (disability rights everywhere else) — and she explains them like a trusted friend, not a lawyer."}</p>
             <div style={s.featuresList}>
               {features.map((feat, i) => (
                 <div key={i} style={s.featureItem}>
@@ -253,7 +253,38 @@ export default function HomePage() {
       </section>
 
       {/* ── MEMBERSHIP ── */}
-      <section id="support" style={s.pricingSection}>
+      {/* MORE THAN SCHOOL */}
+<section style={s.beyondSection}>
+<div style={s.sectionInner}>
+<p style={s.eyebrow}>{es ? 'MÁS QUE LA ESCUELA' : 'MORE THAN SCHOOL'}</p>
+<h2 style={s.sectionTitle}>{es ? 'Donde sucede la vida, ahí estamos.' : "Wherever life happens, we're there."}</h2>
+<p style={s.beyondSub}>{es ? 'La escuela es donde comienza — no donde termina. IEP Approved está construyendo el recurso completo para las personas con discapacidad y las familias que las aman.' : "School is where it starts — not where it ends. IEP Approved is building the complete resource for people with disabilities and the families who love them."}</p>
+<div style={s.beyondGrid}>
+<Link href="/states" style={s.beyondCard}>
+<p style={s.beyondCardTitle}>{es ? 'Los 50 Estados' : 'All 50 States'}</p>
+<p style={s.beyondCardDesc}>{es ? 'Derechos, recursos y contactos específicos de tu estado.' : 'State-specific rights, resources, and contacts for where you live.'}</p>
+</Link>
+<div style={s.beyondCard}>
+<p style={s.beyondCardTitle}>{es ? 'Destinos para Todas las Capacidades' : 'Destinations for All Abilities'}</p>
+<p style={s.beyondCardDesc}>{es ? 'Viajes y experiencias accesibles — muy pronto.' : 'Accessible travel and experiences — coming soon.'}</p>
+</div>
+<div style={s.beyondCard}>
+<p style={s.beyondCardTitle}>{es ? 'Programas y Fondos' : 'Programs and Funding'}</p>
+<p style={s.beyondCardDesc}>{es ? 'Guías en lenguaje claro: Intervención Temprana, Head Start, servicios en el hogar y más.' : 'Plain-language guides: Early Intervention, Head Start, in-home services, and more.'}</p>
+</div>
+<Link href="/storefront" style={s.beyondCard}>
+<p style={s.beyondCardTitle}>{es ? 'Libros y Herramientas' : 'Books and Tools'}</p>
+<p style={s.beyondCardDesc}>{es ? 'Hechos para nuestros niños — libros de cuentos, libros de colorear y guías.' : 'Made for our kids — story books, coloring books, and guides.'}</p>
+</Link>
+<Link href="/community" style={s.beyondCard}>
+<p style={s.beyondCardTitle}>{es ? 'Comunidad' : 'Community'}</p>
+<p style={s.beyondCardDesc}>{es ? 'Una comunidad que te entiende.' : 'A community that gets it.'}</p>
+</Link>
+</div>
+</div>
+</section>
+
+<section id="support" style={s.pricingSection}>
         <div style={s.sectionInner}>
           <p style={s.eyebrow}>{es ? 'MEMBRESÍA' : 'MEMBERSHIP'}</p>
           <h2 style={s.sectionTitle}>{es ? 'Únete a nuestra comunidad — elige la membresía que se adapta a tu familia.' : 'Join our community — choose the membership that fits your family.'}</h2>
@@ -263,7 +294,7 @@ export default function HomePage() {
               <p style={s.pricingTier}>{es ? 'GRATIS' : 'FREE'}</p>
               <p style={s.pricingPrice}>$0</p>
               <p style={s.pricingPriceSub}>{es ? 'siempre gratis para comenzar' : 'always free to start'}</p>
-              <p style={s.pricingDesc}>{es ? 'Hazle 5 preguntas a Ada hoy, sin necesidad de registrarte. Únete a nuestra comunidad y haz hasta 10 preguntas al mes de forma gratuita.' : 'Ask Ada 5 questions today, no signup needed. Join our community and ask up to 10 questions per month — free.'}</p>
+              <p style={s.pricingDesc}>{es ? 'Hazle 3 preguntas a Ada hoy, sin necesidad de registrarte. Únete a nuestra comunidad y haz hasta 10 preguntas al mes de forma gratuita.' : 'Ask Ada 3 questions today, no signup needed. Join our community and ask up to 10 questions per month — free.'}</p>
               {/* CHANGE 2: was /ada */}
               <Link href="/login?mode=signup" style={s.pricingBtnOutline}>{es ? 'Comenzar Gratis' : 'Start Free'}</Link>
             </div>
@@ -420,7 +451,7 @@ const s = {
   cardWrap:{height:'340px',perspective:'1000px',cursor:'pointer'},
   cardInner:{position:'relative',width:'100%',height:'100%',transformStyle:'preserve-3d',transition:'transform 0.6s cubic-bezier(0.4,0,0.2,1)'},
   cardFront:{position:'absolute',width:'100%',height:'100%',backfaceVisibility:'hidden',backgroundColor:'#ffffff',border:'1px solid rgba(45,27,78,0.1)',borderRadius:'16px',padding:'32px',display:'flex',flexDirection:'column',justifyContent:'space-between',boxShadow:'0 4px 24px rgba(0,0,0,0.08)'},
-  cardBack:{position:'absolute',width:'100%',height:'100%',backfaceVisibility:'hidden',backgroundColor:'#2D1B4E',borderRadius:'16px',padding:'28px',transform:'rotateY(180deg)',display:'flex',flexDirection:'column',justifyContent:'space-between',alignItems:'center',textAlign:'center'},
+  cardBack:{position:'absolute',width:'100%',height:'100%',backfaceVisibility:'hidden',backgroundColor:'#2D1B4E',borderRadius:'16px',padding:'28px',transform:'rotateY(180deg)',display:'flex',flexDirection:'column',justifyContent:'center',gap:'18px',alignItems:'center',textAlign:'center'},
   cardNumber:{color:'#D4A843',fontSize:'36px',fontFamily:'Cormorant Garamond,serif',fontWeight:'700'},
   cardTitle:{color:'#2D1B4E',fontSize:'20px',fontFamily:'Cormorant Garamond,serif',fontWeight:'700',margin:'8px 0'},
   cardDesc:{color:'#6b7280',fontSize:'14px',lineHeight:'1.6',fontFamily:'Outfit,sans-serif',flex:1},
@@ -461,7 +492,13 @@ const s = {
   featureTitle:{color:'#e8e0f0',fontSize:'15px',fontWeight:'700',fontFamily:'Outfit,sans-serif',margin:'0 0 4px'},
   featureDesc:{color:'#b8a8d0',fontSize:'13px',lineHeight:'1.5',fontFamily:'Outfit,sans-serif',margin:0},
   meetAdaBtn:{display:'inline-block',backgroundColor:'#D4A843',color:'#2D1B4E',padding:'13px 26px',borderRadius:'8px',textDecoration:'none',fontSize:'15px',fontWeight:'800',fontFamily:'Outfit,sans-serif'},
-  pricingSection:{backgroundColor:'#0f0a1a',padding:'80px 0'},
+  beyondSection:{backgroundColor:'#1a0f2e',padding:'80px 0'},
+beyondSub:{color:'#b8a8d0',fontSize:'17px',lineHeight:'1.7',margin:'0 0 40px',fontFamily:'Outfit,sans-serif',maxWidth:'680px'},
+beyondGrid:{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:'16px'},
+beyondCard:{backgroundColor:'rgba(255,255,255,0.04)',border:'1px solid rgba(212,168,67,0.25)',borderRadius:'12px',padding:'20px',textDecoration:'none',display:'flex',flexDirection:'column',gap:'8px'},
+beyondCardTitle:{color:'#D4A843',fontSize:'17px',fontWeight:'700',fontFamily:'Cormorant Garamond,serif',margin:0},
+beyondCardDesc:{color:'#b8a8d0',fontSize:'13px',lineHeight:'1.5',fontFamily:'Outfit,sans-serif',margin:0},
+pricingSection:{backgroundColor:'#0f0a1a',padding:'80px 0'},
   pricingRow:{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:'24px',alignItems:'start',marginTop:'48px'},
   pricingCard:{backgroundColor:'#1a0f2e',border:'1px solid rgba(212,168,67,0.2)',borderRadius:'16px',padding:'32px 28px',display:'flex',flexDirection:'column',gap:'12px'},
   pricingTier:{color:'#b8a8d0',fontSize:'13px',fontWeight:'700',letterSpacing:'2px',fontFamily:'Outfit,sans-serif',margin:0},
