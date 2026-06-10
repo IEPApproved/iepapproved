@@ -36,7 +36,8 @@ function cleanForElevenLabs(text, lang = 'en') {
     cleaned = cleaned.replace(/\bIEP\b/g, 'I-E-P');
     cleaned = cleaned.replace(/\b504\b/g, 'quinientos cuatro');
   }
-  cleaned = cleaned.replace(/https?:\/\/\S+/g, '');
+  cleaned = cleaned.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}]/gu, '');
+cleaned = cleaned.replace(/https?:\/\/\S+/g, '');
   cleaned = cleaned.replace(/  +/g, ' ');
   return cleaned.trim().substring(0, 2500);
 }
@@ -62,7 +63,8 @@ function stripMarkdown(text) {
   // Horizontal rules
   t = t.replace(/^[\-\*_]{3,}\s*$/gm, '');
   // Collapse 3+ blank lines to 2
-  t = t.replace(/\n{3,}/g, '\n\n');
+  t = t.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}]/gu, '');
+t = t.replace(/\n{3,}/g, '\n\n');
   return t.trim();
 }
 
