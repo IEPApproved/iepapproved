@@ -109,6 +109,7 @@ export default function AdaPage() {
   const userTier = profile?.tier || (user ? 'free' : 'guest');
   const isUnlimited = userTier === 'unlimited';
   const isGuest = !user;
+const isVoiceTier = userTier === 'unlimited' || userTier === 'pro';
   const limit = isUnlimited ? Infinity : isGuest ? QUESTION_LIMIT_GUEST : QUESTION_LIMIT_FREE;
   const questionsLeft = Math.max(0, limit - questionCount);
   const isUrgent = isGuest && questionsLeft <= 1;
@@ -235,7 +236,7 @@ export default function AdaPage() {
     }
 
     setMessages([{ role: 'assistant', content: greeting }]);
-    if (!greetingPlayedRef.current && autoRead) {
+    if (!greetingPlayedRef.current && autoRead && isVoiceTier) {
       greetingPlayedRef.current = true;
       setTimeout(() => speakText(greeting, lang), 800);
     }
@@ -362,7 +363,7 @@ export default function AdaPage() {
       const reply = data.message || data.content || "I'm sorry, I had trouble with that. Please try again.";
       setMessages(prev => [...prev, { role: 'assistant', content: reply }]);
       setIsThinking(false);
-      if (autoRead) await speakText(reply, lang);
+      if (autoRead && isVoiceTier) await speakText(reply, lang);
 
       // Show nudge for guests only, after first answer, if not dismissed
       if (isGuest && !nudgeDismissed) {
@@ -552,7 +553,9 @@ export default function AdaPage() {
 )}
             </div>
           </div>
-          <div style={s.mobileAudioRow}>
+          {isVoiceTier && (
+<>
+<div style={s.mobileAudioRow}>
             {renderPlayPauseBtn(s.mobileAudioBtn)}
             {isSpeaking && (
               <button onClick={stopAudio} style={s.mobileStopBtn}>⏹</button>
@@ -560,6 +563,8 @@ export default function AdaPage() {
             <button onClick={() => setShowSettings(!showSettings)} style={s.settingsBtn}>⚙️</button>
           </div>
           {showSettings && <SettingsPanel />}
+</>
+)}
         </div>
       )}
 
@@ -601,13 +606,17 @@ export default function AdaPage() {
               <span style={{...s.statusDot, backgroundColor: isThinking?'#f59e0b':isSpeaking?'#D4A843':'#22c55e'}} />
               {isThinking?(lang==='es'?'Pensando...':'Thinking...'):isSpeaking?(lang==='es'?'Hablando...':'Speaking...'):(lang==='es'?'En línea':'Online')}
             </div>
-            <div style={s.audioControls}>
+            {isVoiceTier ? (
+<div style={s.audioControls}>
               <div style={s.audioRow}>
                 {renderPlayPauseBtn()}
                 {isSpeaking && <button onClick={stopAudio} style={s.stopBtn}>⏹ Stop</button>}
               </div>
               <SettingsPanel />
             </div>
+) : (
+<Link href="/signup" style={s.voiceUpsell}>Upgrade to hear Ada speak every answer aloud</Link>
+)}
 
             {/* Upgrade CTA for non-unlimited logged-in users */}
             {user && !isUnlimited && (
@@ -843,7 +852,8 @@ const s = {
   userInfoTierFree:{color:'#b8a8d0',fontSize:'11px',fontFamily:'Outfit,sans-serif'},
   userInfoState:{color:'#b8a8d0',fontSize:'11px',fontFamily:'Outfit,sans-serif',marginTop:'3px'},
   statusBadge:{display:'flex',alignItems:'center',gap:'6px',backgroundColor:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:'20px',padding:'5px 12px',fontSize:'12px',color:'#e8e0f0'},
-  audioControls:{width:'100%',display:'flex',flexDirection:'column',gap:'8px'},
+  voiceUpsell:{display:'block',width:'100%',backgroundColor:'rgba(212,168,67,0.08)',border:'1px dashed rgba(212,168,67,0.45)',borderRadius:'8px',padding:'10px 12px',color:'#D4A843',fontSize:'12px',textAlign:'center',fontFamily:'Outfit,sans-serif',textDecoration:'none',lineHeight:'1.5'},
+audioControls:{width:'100%',display:'flex',flexDirection:'column',gap:'8px'},
   audioRow:{display:'flex',gap:'8px'},
   audioBtn:{flex:1,padding:'10px',backgroundColor:'#D4A843',color:'#2D1B4E',border:'none',borderRadius:'8px',fontSize:'13px',fontWeight:'700',fontFamily:'Outfit,sans-serif',cursor:'pointer'},
   stopBtn:{padding:'10px 12px',backgroundColor:'rgba(239,68,68,0.15)',color:'#ef4444',border:'1px solid rgba(239,68,68,0.3)',borderRadius:'8px',fontSize:'13px',cursor:'pointer'},
