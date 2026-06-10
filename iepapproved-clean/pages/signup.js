@@ -8,7 +8,7 @@ import { useRouter } from 'next/router'
 import { useAuth } from '../context/AuthContext'
 import Nav from '../components/Nav'
 
-const ADA_UNLIMITED_PRICE_ID = 'price_1TfOauPsMEtDZUDk1o4Vcy1c'
+// Plans resolve to Stripe prices server-side in /api/create-checkout
 
 export default function Signup() {
   const router = useRouter()
@@ -22,7 +22,7 @@ export default function Signup() {
 
   // If already unlimited → redirect to Ada
   useEffect(() => {
-    if (!loading && profile?.tier === 'unlimited') {
+    if (!loading && ['unlimited', 'pro', 'advocate'].includes(profile?.tier)) {
       router.replace('/ada')
     }
   }, [loading, profile])
@@ -32,7 +32,7 @@ export default function Signup() {
     if (user?.email) setEmail(user.email)
   }, [user])
 
-  const handleCheckout = async () => {
+  const handleCheckout = async (plan = 'unlimited') => {
     if (!email || !email.includes('@')) {
       setError('Please enter a valid email address')
       return
@@ -43,7 +43,7 @@ export default function Signup() {
       const res = await fetch('/api/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ priceId: ADA_UNLIMITED_PRICE_ID, email })
+        body: JSON.stringify({ plan, email })
       })
       const data = await res.json()
       if (data.url) {
@@ -61,14 +61,14 @@ export default function Signup() {
   if (!mounted || loading) return null
 
   // Already unlimited — show redirect message briefly
-  if (profile?.tier === 'unlimited') {
+  if (['unlimited', 'pro', 'advocate'].includes(profile?.tier)) {
     return (
       <>
       <Nav />
       <div style={{ minHeight: '100vh', background: '#F3F0FA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Outfit, sans-serif' }}>
         <div style={{ textAlign: 'center', color: '#2D1B4E' }}>
           <div style={{ fontSize: '48px', marginBottom: '16px' }}>✦</div>
-          <p style={{ fontSize: '18px', fontWeight: '700' }}>You already have Ada Unlimited!</p>
+          <p style={{ fontSize: '18px', fontWeight: '700' }}>Your membership is active!</p>
           <p style={{ color: '#7A6E8E', marginTop: '8px' }}>Redirecting you to Ada...</p>
         </div>
       </div>
@@ -107,8 +107,7 @@ export default function Signup() {
               {[
                 ['♾️', 'Unlimited questions to Ada', 'No monthly limits'],
                 ['⚖️', 'Federal law coverage', 'IDEA, ADA, and Section 504'],
-                ['🔊', 'Ada Responds', 'Ada provides both text and voice response'],
-                ['🎤', 'Ask Ada — Voice Recognition', 'Ask Ada by typing or using the mic, hands free'],
+                                ['🎤', 'Ask Ada — Voice Recognition', 'Ask Ada by typing or using the mic, hands free'],
                 ['🌎', 'English and Spanish', 'Ada responds in the language you ask — English or Español'],
               ].map(([icon, title, desc], i) => (
                 <div key={i} style={s.feature}>
@@ -167,7 +166,7 @@ export default function Signup() {
 
               <button
                 style={{...s.btn, opacity: checkoutLoading ? 0.7 : 1}}
-                onClick={handleCheckout}
+                onClick={() => handleCheckout('unlimited')}
                 disabled={checkoutLoading}
               >
                 {checkoutLoading ? 'Redirecting to checkout...' : 'Continue to Checkout →'}
@@ -183,13 +182,13 @@ export default function Signup() {
             </div>
 
             <div style={s.comingSoon}>
-              <div style={s.comingSoonTitle}>More plans coming soon</div>
+              <div style={s.comingSoonTitle}>Go further</div>
               <div style={s.comingSoonTiers}>
                 <div style={s.tier}>
                   <div style={s.tierName}>IEP Pro</div>
                   <div style={s.tierPrice}>$9.99/mo</div>
-                  <div style={s.tierDesc}>Ada + all downloadable resources + community</div>
-                  <div style={s.tierBadge}>Coming Soon</div>
+                  <div style={s.tierDesc}>Everything in Unlimited + your state unlocked + Ada speaks every answer aloud</div>
+                  <button onClick={() => handleCheckout('pro')} style={s.tierBtn}>Get IEP Pro →</button>
                 </div>
                 <div style={s.tier}>
                   <div style={s.tierName}>Advocate+</div>
@@ -252,4 +251,5 @@ const s = {
   tierPrice: { fontSize:'16px', fontWeight:700, color:'#D4A843', marginBottom:'6px' },
   tierDesc: { fontSize:'11px', color:'#7A6E8E', lineHeight:1.4, marginBottom:'8px' },
   tierBadge: { display:'inline-block', background:'#F3F0FA', color:'#7A6E8E', fontSize:'10px', fontWeight:700, padding:'3px 8px', borderRadius:'100px' },
+tierBtn: { display:'inline-block', background:'#2D1B4E', color:'#D4A843', fontSize:'11px', fontWeight:700, padding:'7px 12px', borderRadius:'100px', border:'none', cursor:'pointer', fontFamily:'Outfit,sans-serif' },
 }
