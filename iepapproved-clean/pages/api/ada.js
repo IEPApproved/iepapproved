@@ -77,7 +77,7 @@ async function checkAndTrackUsage(userId, supabase) {
     .single()
 
   if (!profile) return { allowed: false }
-  if (profile.tier === 'unlimited') return { allowed: true }
+  if (['unlimited', 'pro', 'advocate'].includes(profile.tier)) return { allowed: true }
 
   const now = new Date()
   const resetAt = new Date(profile.questions_reset_at)
@@ -125,13 +125,13 @@ export default async function handler(req, res) {
       }
 
       // State context for unlimited users
-      if (userTier === 'unlimited' && profile?.state) {
+      if ((userTier === 'pro' || userTier === 'advocate') && profile?.state) {
         systemPrompt += await getStateContext(profile.state)
-        systemPrompt += `\n\nThis user is Ada Unlimited from ${profile.state}. Provide state resources when relevant.`
+        systemPrompt += `\n\nThis user is a paid member from ${profile.state}. Provide state resources when relevant.`
       }
 
-// Web search — Unlimited members only
-if (userTier === 'unlimited') {
+// Web search — Pro and Advocate members
+if (userTier === 'pro' || userTier === 'advocate') {
 systemPrompt += '\n\nWEB SEARCH:\nYou have access to a web search tool. Use it when a question involves recent policy or regulation changes, current contact information for state agencies, PTI centers, or advocacy organizations, deadlines, or local resources that may have changed. Do not search for settled federal law fundamentals you already know, such as the definitions of FAPE, LRE, or the IEP process. When your answer relies on web results, end with a final section that begins exactly with Sources: listing the source names and links in plain text.'
 }
 
@@ -141,7 +141,7 @@ systemPrompt += '\n\nWEB SEARCH:\nYou have access to a web search tool. Use it w
     }
 
     // Paid members get the flagship model; free and guest traffic runs on Sonnet (~40% cheaper)
-const aiModel = (userTier === 'unlimited' || userTier === 'pro') ? 'claude-opus-4-5' : 'claude-sonnet-4-6'
+const aiModel = (userTier === 'unlimited' || userTier === 'pro' || userTier === 'advocate') ? 'claude-opus-4-5' : 'claude-sonnet-4-6'
 
 // Call Anthropic API
     const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
@@ -156,7 +156,7 @@ const aiModel = (userTier === 'unlimited' || userTier === 'pro') ? 'claude-opus-
 max_tokens: 2048,
 system: systemPrompt,
 messages,
-...(userTier === 'unlimited' ? { tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 3 }] } : {}),
+...((userTier === 'pro' || userTier === 'advocate') ? { tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 3 }] } : {}),
       }),
     })
 
