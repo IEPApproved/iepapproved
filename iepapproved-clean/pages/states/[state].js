@@ -89,7 +89,7 @@ export default function StatePage() {
   const sc = String.fromCharCode;
   return (
     <>
-      <Head><title>{stateName} IEP Resources — IEP Approved</title><meta name='description' content={'IEP resources for families in '+stateName+'.') /><meta name='viewport' content='width=device-width, initial-scale=1' /></Head>
+      <Head><title>{stateName} IEP Resources — IEP Approved</title><meta name='description' content={'IEP resources for families in '+stateName+'.'} /><meta name='viewport' content='width=device-width, initial-scale=1' /></Head>
       <Nav />
       <section style={s.stateHeader}><div style={s.stateHeaderInner}>
         <Link href='/states' style={s.backLink}>← All States</Link>
