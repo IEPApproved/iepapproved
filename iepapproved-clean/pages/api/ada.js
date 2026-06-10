@@ -130,6 +130,11 @@ export default async function handler(req, res) {
         systemPrompt += `\n\nThis user is Ada Unlimited from ${profile.state}. Provide state resources when relevant.`
       }
 
+// Web search — Unlimited members only
+if (userTier === 'unlimited') {
+systemPrompt += '\n\nWEB SEARCH:\nYou have access to a web search tool. Use it when a question involves recent policy or regulation changes, current contact information for state agencies, PTI centers, or advocacy organizations, deadlines, or local resources that may have changed. Do not search for settled federal law fundamentals you already know, such as the definitions of FAPE, LRE, or the IEP process. When your answer relies on web results, end with a final section that begins exactly with Sources: listing the source names and links in plain text.'
+}
+
       systemPrompt += `\nUser language preference: ${profile?.language_preference || lang}`
     } else {
       systemPrompt += '\n\nThis is a guest user. Provide federal law information only. Gently mention they can sign up free to track questions and upgrade for state-specific help.'
@@ -145,9 +150,10 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'claude-opus-4-5',
-        max_tokens: 1024,
-        system: systemPrompt,
-        messages,
+max_tokens: 2048,
+system: systemPrompt,
+messages,
+...(userTier === 'unlimited' ? { tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 3 }] } : {}),
       }),
     })
 
@@ -157,13 +163,14 @@ export default async function handler(req, res) {
     }
 
     const data = await anthropicRes.json()
-    const content = data.content?.[0]
+    const blocks = Array.isArray(data.content) ? data.content : []
+const message = blocks.filter(function (b) { return b && b.type === 'text' }).map(function (b) { return b.text }).join('\n').trim()
 
-    if (!content || content.type !== 'text') {
-      throw new Error('Unexpected Anthropic response')
-    }
+if (!message) {
+throw new Error('Unexpected Anthropic response')
+}
 
-    return res.status(200).json({ message: content.text, tier: userTier })
+return res.status(200).json({ message: message, tier: userTier })
 
   } catch (err) {
     console.error('Ada API error:', err)
