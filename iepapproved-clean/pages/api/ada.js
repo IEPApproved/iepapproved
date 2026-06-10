@@ -140,7 +140,10 @@ systemPrompt += '\n\nWEB SEARCH:\nYou have access to a web search tool. Use it w
       systemPrompt += '\n\nThis is a guest user. Provide federal law information only. Gently mention they can sign up free to track questions and upgrade for state-specific help.'
     }
 
-    // Call Anthropic API
+    // Paid members get the flagship model; free and guest traffic runs on Sonnet (~40% cheaper)
+const aiModel = (userTier === 'unlimited' || userTier === 'pro') ? 'claude-opus-4-5' : 'claude-sonnet-4-6'
+
+// Call Anthropic API
     const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -149,7 +152,7 @@ systemPrompt += '\n\nWEB SEARCH:\nYou have access to a web search tool. Use it w
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-opus-4-5',
+        model: aiModel,
 max_tokens: 2048,
 system: systemPrompt,
 messages,
