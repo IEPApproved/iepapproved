@@ -2,6 +2,8 @@
 // ElevenLabs TTS endpoint
 // Fixes: Spanish speed inconsistency, punctuation narration, number language
 
+import { createServerClient } from '../../lib/supabase';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -12,6 +14,23 @@ export default async function handler(req, res) {
   if (!text) {
     return res.status(400).json({ error: 'No text provided' });
   }
+
+// Voice is a paid member feature — server-side gate (Flash/Turbo costs only for revenue users)
+try {
+const supabase = createServerClient(req, res);
+const { data: { user } } = await supabase.auth.getUser();
+if (!user) {
+return res.status(403).json({ error: 'voice_upgrade_required' });
+}
+const { data: profile } = await supabase.from('profiles').select('tier').eq('id', user.id).single();
+const tier = (profile && profile.tier) || 'free';
+if (tier !== 'unlimited' && tier !== 'pro') {
+return res.status(403).json({ error: 'voice_upgrade_required' });
+}
+} catch (gateErr) {
+console.error('Voice gate error:', gateErr);
+return res.status(403).json({ error: 'voice_upgrade_required' });
+}
 
   const VOICE_ID = '9q9xpGHwmkXdA4JI72IU'; // Kaylin
 
