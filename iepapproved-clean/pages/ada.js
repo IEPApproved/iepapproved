@@ -107,7 +107,7 @@ export default function AdaPage() {
 
   // ── DERIVE TIER & LIMITS FROM SUPABASE PROFILE ──────────────────────────────
   const userTier = profile?.tier || (user ? 'free' : 'guest');
-  const isUnlimited = userTier === 'unlimited';
+  const isUnlimited = userTier === 'unlimited' || userTier === 'pro' || userTier === 'advocate';
   const isGuest = !user;
 const isVoiceTier = userTier === 'unlimited' || userTier === 'pro';
   const limit = isUnlimited ? Infinity : isGuest ? QUESTION_LIMIT_GUEST : QUESTION_LIMIT_FREE;
