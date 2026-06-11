@@ -7,6 +7,16 @@ import { createAdminClient } from '../../../lib/supabase'
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
 
+// Stripe price ID to Supabase tier
+const PRICE_TIERS = {
+'price_1TfOauPsMEtDZUDk1o4Vcy1c': 'unlimited',
+'price_1Tgs6gPsMEtDZUDkdT1pi1ZU': 'unlimited',
+'price_1TgsAIPsMEtDZUDkhGthFCEP': 'pro',
+'price_1TgsQbPsMEtDZUDkkda2cmdN': 'pro',
+'price_1TgsDOPsMEtDZUDkIvPRq7Hf': 'advocate',
+'price_1TgsT7PsMEtDZUDkDeSfzA7l': 'advocate',
+}
+
 // REQUIRED: disable body parsing so we get the raw body for Stripe signature verification
 export const config = {
   api: {
@@ -168,6 +178,16 @@ export default async function handler(req, res) {
         const customerId = session.customer
         const subscriptionId = session.subscription
 
+// Determine tier from the purchased price (defaults to unlimited)
+let purchasedTier = 'unlimited'
+try {
+const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 1 })
+const purchasedPriceId = lineItems?.data?.[0]?.price?.id
+if (purchasedPriceId && PRICE_TIERS[purchasedPriceId]) purchasedTier = PRICE_TIERS[purchasedPriceId]
+} catch (liErr) {
+console.error('Line item lookup error (defaulting to unlimited):', liErr.message)
+}
+
         if (!customerEmail) {
           console.error('No email in checkout session')
           break
@@ -180,7 +200,7 @@ export default async function handler(req, res) {
           .upsert(
             {
               email: customerEmail,
-              tier: 'unlimited',
+              tier: purchasedTier,
               stripe_customer_id: customerId,
               stripe_subscription_id: subscriptionId,
               subscription_status: 'active',
@@ -219,7 +239,7 @@ export default async function handler(req, res) {
 
         await supabase
           .from('profiles')
-          .update({ tier: 'unlimited', subscription_status: 'active', updated_at: new Date().toISOString() })
+          .update({ subscription_status: 'active', updated_at: new Date().toISOString() })
           .eq('email', customer.email)
         break
       }
