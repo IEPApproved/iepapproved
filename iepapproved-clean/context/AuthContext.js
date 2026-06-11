@@ -79,5 +79,5 @@ export function useAuth() {
 
 export function useIsUnlimited() {
   const { profile } = useAuth()
-  return profile?.tier === 'unlimited'
+  return ['unlimited', 'pro', 'advocate'].includes(profile?.tier)
 }
