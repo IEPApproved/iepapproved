@@ -1,12 +1,29 @@
 import Stripe from 'stripe'
 import { createAdminClient } from '../../lib/supabase'
 
+// Server-side plan to Stripe price mapping. Never trust raw price IDs from the client.
+const PLAN_PRICES = {
+unlimited: 'price_1TfOauPsMEtDZUDk1o4Vcy1c',
+pro: 'price_1TgsAIPsMEtDZUDkhGthFCEP',
+advocate: 'price_1TgsDOPsMEtDZUDkIvPRq7Hf',
+unlimited_annual: 'price_1Tgs6gPsMEtDZUDkdT1pi1ZU',
+pro_annual: 'price_1TgsQbPsMEtDZUDkkda2cmdN',
+advocate_annual: 'price_1TgsT7PsMEtDZUDkDeSfzA7l',
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { priceId, email } = req.body
+  const { plan, priceId: clientPriceId, email } = req.body
+
+// Resolve price: prefer the plan key; allow a legacy client priceId only if it is one of ours
+const priceId = PLAN_PRICES[plan] || (Object.values(PLAN_PRICES).includes(clientPriceId) ? clientPriceId : null)
+
+if (!priceId) {
+return res.status(400).json({ error: 'Invalid plan' })
+}
 
   if (!email || !email.includes('@')) {
     return res.status(400).json({ error: 'Valid email required' })
