@@ -43,7 +43,7 @@ export default function StatePage() {
   const [adaMessages, setAdaMessages] = useState([]);
   const [adaThinking, setAdaThinking] = useState(false);
 
-  const isUnlimited = profile?.tier === 'unlimited';
+  const isUnlimited = profile?.tier === 'pro' || profile?.tier === 'advocate';
   const stateCode = stateParam ? stateParam.toUpperCase() : '';
   const stateName = stateParam ? (STATE_NAMES[stateParam.toLowerCase()] || stateCode) : '';
 
@@ -102,12 +102,12 @@ export default function StatePage() {
             <h1 style={s.gateTitle}>{stateName} IEP Resources</h1>
             <p style={s.gateSub}>
               State-specific complaint procedures, PTI centers, advocacy organizations,
-              and laws beyond federal IDEA — available to Ada Unlimited members.
+              and laws beyond federal IDEA — available to IEP Pro members.
             </p>
             <Link href="/signup" style={s.gateBtn}>
-              Get Ada Unlimited — $4.99/month
+              Get IEP Pro — $9.99/month
             </Link>
-            <p style={s.gateFine}>Unlimited Ada questions + all 50 state pages. Cancel anytime.</p>
+            <p style={s.gateFine}>Everything in Ada Unlimited + all 50 state pages + Ada speaks every answer aloud. Cancel anytime.</p>
             <div style={s.gateFeatures}>
               <div style={s.gateFeature}><span style={s.gateCheck}>✓</span><span>State complaint procedures and timelines</span></div>
               <div style={s.gateFeature}><span style={s.gateCheck}>✓</span><span>Your federally-funded PTI center</span></div>
@@ -149,7 +149,7 @@ export default function StatePage() {
             <div style={s.stateCodeBig}>{stateCode}</div>
             <div>
               <h1 style={s.stateNameBig}>{stateName}</h1>
-              <div style={s.unlimitedBadge}>Ada Unlimited — State Resources Unlocked</div>
+              <div style={s.unlimitedBadge}>IEP Pro — State Resources Unlocked</div>
             </div>
           </div>
         </div>
