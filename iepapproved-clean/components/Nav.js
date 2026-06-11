@@ -11,6 +11,7 @@ export default function Nav({ questionCount = null }) {
   const { lang, toggleLang } = useLanguage();
   const { user, profile, signOut, loading } = useAuth();
   const isUnlimited = useIsUnlimited();
+const tierLabel = profile?.tier === 'advocate' ? 'Advocate+' : profile?.tier === 'pro' ? 'IEP Pro' : profile?.tier === 'unlimited' ? (lang === 'es' ? 'Ada Sin Límites' : 'Ada Unlimited') : null;
   const router = useRouter();
 
   const [mounted, setMounted] = useState(false);
@@ -44,8 +45,19 @@ export default function Nav({ questionCount = null }) {
     router.push('/');
   };
 
-  const navLinks = [
+  const openPortal = async () => {
+try {
+const res = await fetch('/api/create-portal', { method: 'POST' });
+const data = await res.json();
+if (data.url) { window.location.href = data.url; } else { alert('Could not open the billing portal. Please contact info@iepapproved.com.'); }
+} catch (e) {
+alert('Could not open the billing portal. Please contact info@iepapproved.com.');
+}
+};
+
+const navLinks = [
     { label: lang === 'es' ? 'Cómo Funciona' : 'How It Works', href: '/#how-it-works' },
+{ label: lang === 'es' ? 'Por Estado' : 'States', href: '/states' },
     { label: lang === 'es' ? 'Tienda' : 'Storefront', href: '/storefront' },
     { label: lang === 'es' ? 'Comunidad' : 'Community', href: '/community' },
     { label: lang === 'es' ? 'Contáctenos' : 'Contact Us', href: '/contact' },
@@ -94,7 +106,7 @@ export default function Nav({ questionCount = null }) {
           >
             <div style={s.userAvatar}>{displayName[0].toUpperCase()}</div>
             <span style={s.userName}>{displayName}</span>
-            {isUnlimited && <span style={s.unlimitedPill}>✦ {lang === 'es' ? 'Sin Límites' : 'Unlimited'}</span>}
+            {isUnlimited && tierLabel && <span style={s.unlimitedPill}>✦ {tierLabel}</span>}
             <span style={{ color: '#D4A843', fontSize: '10px' }}>▼</span>
           </button>
 
@@ -105,7 +117,7 @@ export default function Nav({ questionCount = null }) {
                 <div style={s.dropdownEmail}>{user.email}</div>
                 <div style={s.dropdownTier}>
                   {isUnlimited
-                    ? (lang === 'es' ? '✦ Ada Sin Límites — Activo' : '✦ Ada Unlimited — Active')
+                    ? (lang === 'es' ? ('✦ ' + tierLabel + ' — Activo') : ('✦ ' + tierLabel + ' — Active'))
                     : (lang === 'es' ? 'Plan Gratuito' : 'Free Plan')
                   }
                 </div>
@@ -117,6 +129,17 @@ export default function Nav({ questionCount = null }) {
               <Link href="/ada" style={s.dropdownItem} onClick={() => setUserMenuOpen(false)}>
                 💬 {lang === 'es' ? 'Hablar con Ada' : 'Talk to Ada'}
               </Link>
+
+{isUnlimited && (
+<Link href="/states" style={s.dropdownItem} onClick={() => setUserMenuOpen(false)}>
+{lang === 'es' ? 'Recursos de tu estado' : 'Your state resources'}
+</Link>
+)}
+{isUnlimited && (
+<button onClick={openPortal} style={s.dropdownManage}>
+{lang === 'es' ? 'Administrar suscripción' : 'Manage subscription'}
+</button>
+)}
 
               {isUnlimited && (
                 <>
@@ -340,7 +363,8 @@ const s = {
   dropdownDivider: { height: '1px', background: 'rgba(255,255,255,0.06)' },
   dropdownItem: { display: 'block', padding: '12px 16px', color: '#e8e0f0', fontSize: '13px', fontFamily: 'Outfit, sans-serif', textDecoration: 'none', cursor: 'default' },
   dropdownUpgrade: { display: 'block', margin: '8px 12px', padding: '10px 16px', background: '#D4A843', color: '#2D1B4E', fontSize: '13px', fontWeight: '800', fontFamily: 'Outfit, sans-serif', textDecoration: 'none', borderRadius: '8px', textAlign: 'center' },
-  dropdownSignOut: { display: 'block', width: '100%', padding: '12px 16px', background: 'none', border: 'none', borderTop: '1px solid rgba(255,255,255,0.06)', color: '#b8a8d0', fontSize: '13px', fontFamily: 'Outfit, sans-serif', cursor: 'pointer', textAlign: 'left' },
+  dropdownManage: { display: 'block', width: '100%', padding: '12px 16px', background: 'none', border: 'none', color: '#e8e0f0', fontSize: '13px', fontFamily: 'Outfit, sans-serif', cursor: 'pointer', textAlign: 'left' },
+dropdownSignOut: { display: 'block', width: '100%', padding: '12px 16px', background: 'none', border: 'none', borderTop: '1px solid rgba(255,255,255,0.06)', color: '#b8a8d0', fontSize: '13px', fontFamily: 'Outfit, sans-serif', cursor: 'pointer', textAlign: 'left' },
   unlimitedBenefits: { padding: '4px 16px 12px' },
   benefit: { color: '#D4A843', fontSize: '12px', fontFamily: 'Outfit, sans-serif', padding: '2px 0' },
 
