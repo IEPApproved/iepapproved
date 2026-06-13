@@ -12,6 +12,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
+import Nav from '../components/Nav';
 
 const QUESTION_LIMIT_GUEST = 3;
 const QUESTION_LIMIT_FREE = 10;
@@ -465,71 +466,7 @@ const isVoiceTier = userTier === 'unlimited' || userTier === 'pro';
       </Head>
 
       {/* ── TOP NAV ── */}
-      <nav style={s.nav}>
-        <div style={s.navInner}>
-          <Link href="/" style={s.logoLink}>
-            <img src="/logo.png" alt="IEP Approved" style={s.logo}
-              onError={(e) => { e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }} />
-            <div style={{...s.logoFallback, display:'none'}}>
-              <span style={s.logoIEP}>IEP</span>
-              <span style={s.logoApp}>APPROVED</span>
-            </div>
-          </Link>
-          {!isMobile && (
-            <div style={s.navLinks}>
-              <Link href="/#how-it-works" style={s.navLink}>How It Works</Link>
-              <Link href="/storefront" style={s.navLink}>Storefront</Link>
-              <Link href="/community" style={s.navLink}>Community</Link>
-              <Link href="/contact" style={s.navLink}>Contact</Link>
-
-              {/* ── UNLIMITED BADGE ── */}
-              {isUnlimited && (
-  <span style={s.unlimitedStateBadge}>✦ {tierLabel}</span>
-)}
-
-              {/* Question counter — free/guest only */}
-              {!isUnlimited && (
-                <span style={s.qBadge}>{questionsLeft} {lang==='es'?'preguntas':'left'}</span>
-              )}
-
-              <button onClick={toggleLang} style={s.langToggle}>
-                <span style={lang==='en'?s.langOn:s.langOff}>EN</span>
-                <span style={s.langDiv}>|</span>
-                <span style={lang==='es'?s.langOn:s.langOff}>ES</span>
-              </button>
-
-              {/* Show upgrade or my account */}
-              {isUnlimited ? (
-                <Link href="/login" style={s.myAccountBtn}>My Account</Link>
-              ) : user ? (
-                <Link href="/signup" style={s.upgradeBtn}>⭐ Upgrade</Link>
-              ) : (
-                <>
-                  <Link href="/login" style={s.signInBtnNav}>Sign In</Link>
-                  <Link href="/signup" style={s.upgradeBtn}>⭐ Ada Unlimited</Link>
-                </>
-              )}
-            </div>
-          )}
-          {isMobile && (
-            <div style={s.mobileNavRight}>
-              {isUnlimited ? (
-                <span style={s.unlimitedBadgeSm}>✦</span>
-              ) : (
-                <span style={s.qBadgeSm}>{questionsLeft}</span>
-              )}
-              <button onClick={toggleLang} style={s.langToggleSm}>
-                <span style={lang==='en'?s.langOn:s.langOff}>EN</span>
-                <span style={s.langDiv}>|</span>
-                <span style={lang==='es'?s.langOn:s.langOff}>ES</span>
-              </button>
-              {!isUnlimited && (
-                <Link href="/signup" style={s.upgradeBtnSm}>⭐</Link>
-              )}
-            </div>
-          )}
-        </div>
-      </nav>
+      <Nav />
 
       {/* ── MOBILE TOP BAR ── */}
       {isMobile && (
