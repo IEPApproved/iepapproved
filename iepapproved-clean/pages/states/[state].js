@@ -31,6 +31,21 @@ const STATE_NAMES = {
   va: 'Virginia', wa: 'Washington', wv: 'West Virginia', wi: 'Wisconsin', wy: 'Wyoming',
 };
 
+// Resolve a URL slug to a 2-letter state code. Accepts either the code ('fl')
+// or the full name ('florida', 'new-york') so links are shareable.
+const NAME_TO_CODE = Object.keys(STATE_NAMES).reduce((acc, code) => {
+  acc[STATE_NAMES[code].toLowerCase().replace(/[^a-z]/g, '')] = code.toUpperCase();
+  return acc;
+}, {});
+
+function resolveStateCode(param) {
+  if (!param) return '';
+  const p = param.toLowerCase().replace(/[^a-z]/g, '');
+  if (p.length === 2 && STATE_NAMES[p]) return p.toUpperCase();
+  if (NAME_TO_CODE[p]) return NAME_TO_CODE[p];
+  return param.toUpperCase();
+}
+
 export default function StatePage() {
   const router = useRouter();
   const { state: stateParam } = router.query;
@@ -44,8 +59,8 @@ export default function StatePage() {
   const [orgs, setOrgs] = useState([]);
 
   const isUnlimited = profile?.tier === 'pro' || profile?.tier === 'advocate';
-  const stateCode = stateParam ? stateParam.toUpperCase() : '';
-  const stateName = stateParam ? (STATE_NAMES[stateParam.toLowerCase()] || stateCode) : '';
+  const stateCode = resolveStateCode(stateParam);
+  const stateName = stateCode ? (STATE_NAMES[stateCode.toLowerCase()] || stateCode) : '';
 
   useEffect(() => {
     if (!stateParam || authLoading) return;
