@@ -16,7 +16,6 @@ const TABS = [
   { id: 'pti', label: 'PTI Centers' },
   { id: 'advocacy', label: 'Advocacy Orgs' },
   { id: 'laws', label: 'State Laws' },
-  { id: 'ada', label: 'Ask Ada' },
 ];
 
 const STATE_NAMES = {
@@ -221,7 +220,7 @@ export default function StatePage() {
                       <p style={s.overviewCardText}>
                         Ask Ada a {stateName}-specific question about your child's IEP rights.
                       </p>
-                      <button onClick={() => setActiveTab('ada')} style={s.overviewCardLink}>
+                      <button onClick={() => document.getElementById('ask-ada')?.scrollIntoView({ behavior: 'smooth' })} style={s.overviewCardLink}>
                         Ask Ada about {stateName}
                       </button>
                     </div>
@@ -239,7 +238,7 @@ export default function StatePage() {
                     We are actively building out {stateName} state content. Ask Ada and she will
                     apply federal IDEA, ADA, and Section 504 to your situation.
                   </p>
-                  <button onClick={() => setActiveTab('ada')} style={s.noDataBtn}>
+                  <button onClick={() => document.getElementById('ask-ada')?.scrollIntoView({ behavior: 'smooth' })} style={s.noDataBtn}>
                     Ask Ada about {stateName}
                   </button>
                 </div>
@@ -288,7 +287,7 @@ export default function StatePage() {
                     State complaint content for {stateName} is being added. Under federal IDEA you
                     have the right to file a complaint for any IDEA violation within the past year.
                   </p>
-                  <button onClick={() => setActiveTab('ada')} style={s.noDataBtn}>
+                  <button onClick={() => document.getElementById('ask-ada')?.scrollIntoView({ behavior: 'smooth' })} style={s.noDataBtn}>
                     Ask Ada about filing a complaint
                   </button>
                 </div>
@@ -365,7 +364,7 @@ export default function StatePage() {
                     Advocacy data for {stateName} is being added. Ask Ada to help find resources
                     for your child's diagnosis and location.
                   </p>
-                  <button onClick={() => setActiveTab('ada')} style={s.noDataBtn}>
+                  <button onClick={() => document.getElementById('ask-ada')?.scrollIntoView({ behavior: 'smooth' })} style={s.noDataBtn}>
                     Ask Ada to help find resources
                   </button>
                 </div>
@@ -394,7 +393,7 @@ export default function StatePage() {
                     State law detail for {stateName} is being added. Ask Ada about specific
                     {' '}{stateName} protections.
                   </p>
-                  <button onClick={() => setActiveTab('ada')} style={s.noDataBtn}>
+                  <button onClick={() => document.getElementById('ask-ada')?.scrollIntoView({ behavior: 'smooth' })} style={s.noDataBtn}>
                     Ask Ada about {stateName} law
                   </button>
                 </div>
@@ -402,8 +401,8 @@ export default function StatePage() {
             </div>
           )}
 
-          {activeTab === 'ada' && (
-            <div style={s.tabContent}>
+          {(
+            <div style={{ ...s.tabContent, borderTop: '2px solid rgba(212,168,67,0.2)', paddingTop: '28px', marginTop: '8px' }} id="ask-ada">
               <h2 style={s.tabTitle}>Ask Ada About {stateName}</h2>
               <p style={s.tabIntro}>
                 Ada knows {stateName} IEP laws. Ask her anything about your child's rights in {stateName}.
