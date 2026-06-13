@@ -43,6 +43,7 @@ export default function AdminDashboard() {
 
   const [tab, setTab] = useState('members')
   const [members, setMembers] = useState([])
+  const [search, setSearch] = useState('')
   const [testimonials, setTestimonials] = useState([])
   const [stats, setStats] = useState({ total: 0, unlimited: 0, free: 0, todaySignups: 0 })
   const [dataLoading, setDataLoading] = useState(true)
@@ -63,11 +64,15 @@ export default function AdminDashboard() {
 
   const loadData = async () => {
     setDataLoading(true)
-    const { data: membersData } = await supabase
-      .from('profiles')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(200)
+    const { data: { session } } = await supabase.auth.getSession()
+    const token = session?.access_token || ''
+    const membersRes = await fetch('/api/admin/list-users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({}),
+    })
+    const membersJson = await membersRes.json().catch(() => ({}))
+    const membersData = membersJson.users || []
 
     if (membersData) {
       setMembers(membersData)
@@ -87,6 +92,18 @@ export default function AdminDashboard() {
 
     if (testimonialsData) setTestimonials(testimonialsData)
     setDataLoading(false)
+  }
+
+  const searchUsers = async (q) => {
+    const { data: { session } } = await supabase.auth.getSession()
+    const token = session?.access_token || ''
+    const res = await fetch('/api/admin/list-users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ q }),
+    })
+    const json = await res.json().catch(() => ({}))
+    setMembers(json.users || [])
   }
 
   const toggleTestimonial = async (id, approved) => {
@@ -212,6 +229,11 @@ export default function AdminDashboard() {
         {/* Members tab */}
         {tab === 'members' && (
           <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', gap: '8px', padding: '16px', borderBottom: '1px solid #e5e7eb', alignItems: 'center' }}>
+              <input type="text" value={search} onChange={e => setSearch(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') searchUsers(search) }} placeholder="Search by email..." style={{ flex: 1, maxWidth: '320px', padding: '8px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '13px', fontFamily: 'inherit' }} />
+              <button onClick={() => searchUsers(search)} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#2D1B4E', color: 'white', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' }}>Search</button>
+              <button onClick={() => { setSearch(''); loadData() }} style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #d1d5db', background: 'white', color: '#6b7280', fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit' }}>Show all</button>
+            </div>
             {dataLoading ? (
               <div style={{ padding: '48px', textAlign: 'center', color: '#9ca3af' }}>Loading...</div>
             ) : (
