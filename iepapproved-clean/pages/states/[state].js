@@ -41,6 +41,7 @@ export default function StatePage() {
   const [adaInput, setAdaInput] = useState('');
   const [adaMessages, setAdaMessages] = useState([]);
   const [adaThinking, setAdaThinking] = useState(false);
+  const [orgs, setOrgs] = useState([]);
 
   const isUnlimited = profile?.tier === 'pro' || profile?.tier === 'advocate';
   const stateCode = stateParam ? stateParam.toUpperCase() : '';
@@ -53,13 +54,13 @@ export default function StatePage() {
       return;
     }
     const supabase = createClient();
-    supabase
-      .from('state_content')
-      .select('*')
-      .ilike('state_code', stateCode)
-      .single()
-      .then(({ data }) => {
-        if (data) setStateData(data);
+    Promise.all([
+      supabase.from('state_content').select('*').ilike('state_code', stateCode).single(),
+      supabase.from('organizations').select('*').eq('is_active', true).ilike('state_code', stateCode).order('type', { ascending: true }).order('sort_order', { ascending: true }),
+    ])
+      .then(([scRes, orgRes]) => {
+        if (scRes.data) setStateData(scRes.data);
+        if (orgRes.data) setOrgs(orgRes.data);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -194,8 +195,8 @@ export default function StatePage() {
                       <h3 style={s.overviewCardTitle}>PTI Centers</h3>
                       <p style={s.overviewCardDef}>Your federally funded parent center, with free training and one-on-one help.</p>
                       <p style={s.overviewCardText}>
-                        {stateData.pti_centers && stateData.pti_centers.length > 0
-                          ? stateData.pti_centers.length + ' federally-funded center(s) serving ' + stateName + ' families.'
+                        {orgs.filter(o => o.type === 'pti').length > 0
+                          ? orgs.filter(o => o.type === 'pti').length + ' federally-funded center(s) serving ' + stateName + ' families.'
                           : 'Contact PACER Center (pacer.org) for national support.'}
                       </p>
                       <button onClick={() => setActiveTab('pti')} style={s.overviewCardLink}>
@@ -302,13 +303,12 @@ export default function StatePage() {
                 PTI centers are federally funded under IDEA to provide free training, resources,
                 and individual support to families of children with disabilities.
               </p>
-              {stateData && stateData.pti_centers && stateData.pti_centers.length > 0 ? (
+              {orgs.filter(o => o.type === 'pti').length > 0 ? (
                 <div style={s.orgGrid}>
-                  {stateData.pti_centers.map((pti, i) => (
-                    <div key={i} style={s.orgCard}>
+                  {orgs.filter(o => o.type === 'pti').map((pti) => (
+                    <div key={pti.id} style={s.orgCard}>
                       <div style={s.orgTypeBadge}>PTI Center</div>
                       <h3 style={s.orgName}>{pti.name}</h3>
-                      {pti.region && <p style={s.orgRegion}>{pti.region}</p>}
                       {pti.description && <p style={s.orgDesc}>{pti.description}</p>}
                       <div style={s.orgLinks}>
                         {pti.phone && (
@@ -340,15 +340,17 @@ export default function StatePage() {
               <p style={s.tabIntro}>
                 Local and statewide organizations that support families with children with disabilities.
               </p>
-              {stateData && stateData.advocacy_orgs && stateData.advocacy_orgs.length > 0 ? (
+              {orgs.filter(o => o.type === 'advocacy' || o.type === 'protection_advocacy').length > 0 ? (
                 <div style={s.orgGrid}>
-                  {stateData.advocacy_orgs.map((org, i) => (
-                    <div key={i} style={s.orgCard}>
-                      <div style={s.orgTypeBadge}>Advocacy</div>
+                  {orgs.filter(o => o.type === 'advocacy' || o.type === 'protection_advocacy').map((org) => (
+                    <div key={org.id} style={s.orgCard}>
+                      <div style={s.orgTypeBadge}>{org.type === 'protection_advocacy' ? 'Protection & Advocacy' : 'Advocacy'}</div>
                       <h3 style={s.orgName}>{org.name}</h3>
                       {org.description && <p style={s.orgDesc}>{org.description}</p>}
                       <div style={s.orgLinks}>
-                        {org.contact && <span style={s.orgLinkText}>{org.contact}</span>}
+                        {org.phone && (
+                          <a href={'tel:' + org.phone} style={s.orgLink}>{org.phone}</a>
+                        )}
                         {org.website && (
                           <a href={org.website} target="_blank" rel="noopener noreferrer" style={s.orgLink}>
                             Visit Website
