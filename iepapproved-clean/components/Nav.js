@@ -11,7 +11,7 @@ export default function Nav({ questionCount = null }) {
   const { lang, toggleLang } = useLanguage();
   const { user, profile, signOut, loading } = useAuth();
   const isUnlimited = useIsUnlimited();
-const tierLabel = profile?.tier === 'advocate' ? 'Advocate+' : profile?.tier === 'pro' ? 'IEP Pro' : profile?.tier === 'unlimited' ? (lang === 'es' ? 'Ada Sin Límites' : 'Ada Unlimited') : null;
+const tierLabel = profile?.tier === 'advocate' ? 'IEP Advocate' : profile?.tier === 'pro' ? 'IEP Pro' : profile?.tier === 'unlimited' ? (lang === 'es' ? 'Ada Sin Límites' : 'Ada Unlimited') : null;
   const router = useRouter();
 
   const [mounted, setMounted] = useState(false);
@@ -144,13 +144,10 @@ const navLinks = [
               {isUnlimited && (
                 <>
                   <div style={s.dropdownItem}>
-                    <span style={{ color: '#D4A843' }}>✦ {lang === 'es' ? 'Tus beneficios Unlimited:' : 'Your Unlimited benefits:'}</span>
+                    <span style={{ color: '#D4A843' }}>✦ {lang === 'es' ? ('Tus beneficios ' + tierLabel + ':') : ('Your ' + tierLabel + ' benefits:')}</span>
                   </div>
                   <div style={s.unlimitedBenefits}>
-                    <div style={s.benefit}>✓ {lang === 'es' ? 'Preguntas ilimitadas' : 'Unlimited questions'}</div>
-                    <div style={s.benefit}>✓ {lang === 'es' ? 'Recursos por estado' : 'State-specific resources'}</div>
-                    <div style={s.benefit}>✓ {lang === 'es' ? 'Voz EN + ES' : 'Voice EN + ES'}</div>
-                    <div style={s.benefit}>✓ {lang === 'es' ? 'Acceso a comunidad' : 'Community access'}</div>
+                    {((profile?.tier === 'pro' || profile?.tier === 'advocate') ? [lang === 'es' ? 'Preguntas ilimitadas' : 'Unlimited questions', lang === 'es' ? 'Recursos por estado' : 'State-specific resources', lang === 'es' ? 'Voz EN + ES' : 'Voice EN + ES', lang === 'es' ? 'Acceso a comunidad' : 'Community access'] : [lang === 'es' ? 'Preguntas ilimitadas' : 'Unlimited questions', lang === 'es' ? 'Voz EN + ES' : 'Voice EN + ES']).map((b, i) => <div key={i} style={s.benefit}>✓ {b}</div>)}
                   </div>
                   <div style={s.dropdownDivider} />
                 </>
