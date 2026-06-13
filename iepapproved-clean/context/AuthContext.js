@@ -24,7 +24,23 @@ export function AuthProvider({ children }) {
         .select('*')
         .eq('id', userId)
         .single()
-      if (!error && data) setProfile(data)
+      if (error || !data) return
+
+      // Trial expiry: if a trial has lapsed and they are not a paying
+      // subscriber, drop them back to free (locally and in the database).
+      if (
+        data.trial_ends_at &&
+        data.subscription_status !== 'active' &&
+        new Date(data.trial_ends_at) < new Date()
+      ) {
+        data.tier = 'free'
+        supabase
+          .from('profiles')
+          .update({ tier: 'free', trial_ends_at: null })
+          .eq('id', userId)
+      }
+
+      setProfile(data)
     } catch (err) {
       console.error('fetchProfile error (non-fatal):', err)
     }
