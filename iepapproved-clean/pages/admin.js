@@ -94,6 +94,18 @@ export default function AdminDashboard() {
     setTestimonials(prev => prev.map(t => t.id === id ? { ...t, approved: !approved } : t))
   }
 
+  const updateTier = async (id, newTier) => {
+    const prevMembers = members
+    setMembers(ms => ms.map(m => m.id === id ? { ...m, tier: newTier } : m))
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch('/api/admin/set-tier', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (session?.access_token || '') },
+      body: JSON.stringify({ id, tier: newTier }),
+    })
+    if (!res.ok) { setMembers(prevMembers); alert('Could not update tier.') } else { loadData() }
+  }
+
   const handleStateNameChange = (name) => {
     setStateForm(f => ({
       ...f,
@@ -219,11 +231,12 @@ export default function AdminDashboard() {
                         <td style={{ padding: '12px 16px', color: '#6b7280' }}>{m.email}</td>
                         <td style={{ padding: '12px 16px', color: '#9ca3af' }}>{m.state || '—'}</td>
                         <td style={{ padding: '12px 16px' }}>
-                          <span style={{
-                            background: m.tier === 'unlimited' ? '#dcfce7' : '#f3f4f6',
-                            color: m.tier === 'unlimited' ? '#16a34a' : '#6b7280',
-                            padding: '2px 10px', borderRadius: '50px', fontSize: '12px', fontWeight: '600'
-                          }}>{m.tier}</span>
+                          <select value={m.tier || 'free'} onChange={e => updateTier(m.id, e.target.value)} style={{ padding: '4px 8px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '12px', fontFamily: 'inherit', cursor: 'pointer' }}>
+                            <option value="free">free</option>
+                            <option value="unlimited">unlimited</option>
+                            <option value="pro">pro</option>
+                            <option value="advocate">advocate</option>
+                          </select>
                         </td>
                         <td style={{ padding: '12px 16px', fontSize: '12px', color: m.subscription_status === 'active' ? '#16a34a' : m.subscription_status === 'past_due' ? '#dc2626' : '#9ca3af' }}>
                           {m.subscription_status}
