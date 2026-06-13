@@ -108,6 +108,7 @@ export default function AdaPage() {
   // ── DERIVE TIER & LIMITS FROM SUPABASE PROFILE ──────────────────────────────
   const userTier = profile?.tier || (user ? 'free' : 'guest');
   const isUnlimited = userTier === 'unlimited' || userTier === 'pro' || userTier === 'advocate';
+  const tierLabel = userTier === 'pro' ? 'Pro' : userTier === 'advocate' ? 'Advocate' : 'Unlimited';
   const isGuest = !user;
 const isVoiceTier = userTier === 'unlimited' || userTier === 'pro';
   const limit = isUnlimited ? Infinity : isGuest ? QUESTION_LIMIT_GUEST : QUESTION_LIMIT_FREE;
@@ -483,7 +484,7 @@ const isVoiceTier = userTier === 'unlimited' || userTier === 'pro';
 
               {/* ── UNLIMITED BADGE ── */}
               {isUnlimited && (
-  <span style={s.unlimitedStateBadge}>✦ Unlimited</span>
+  <span style={s.unlimitedStateBadge}>✦ {tierLabel}</span>
 )}
 
               {/* Question counter — free/guest only */}
@@ -549,7 +550,7 @@ const isVoiceTier = userTier === 'unlimited' || userTier === 'pro';
               </div>
               {/* Mobile unlimited badge */}
              {isUnlimited && (
-  <div style={s.mobileUnlimitedBadge}>✦ Unlimited</div>
+  <div style={s.mobileUnlimitedBadge}>✦ {tierLabel}</div>
 )}
             </div>
           </div>
@@ -588,11 +589,11 @@ const isVoiceTier = userTier === 'unlimited' || userTier === 'pro';
                 <div style={s.userInfoName}>{displayName || user.email}</div>
                 {isUnlimited ? (
   <>
-    <div style={s.userInfoTier}>❖ Unlimited</div>
+    <div style={s.userInfoTier}>❖ {tierLabel}</div>
     <div style={s.userInfoStateNote}>
       {profile?.state
-        ? `❖ ${profile.state} · Unlimited`
-        : '❖ All states · Unlimited'
+        ? `❖ ${profile.state} · ${tierLabel}`
+        : `❖ All states · ${tierLabel}`
       }
     </div>
   </>
