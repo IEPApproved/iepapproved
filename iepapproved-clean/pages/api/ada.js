@@ -106,6 +106,7 @@ export default async function handler(req, res) {
     const { data: { user } } = await supabase.auth.getUser()
 
     let systemPrompt = lang === 'es' ? BASE_SYSTEM_PROMPT_ES : BASE_SYSTEM_PROMPT_EN
+    systemPrompt += String.fromCharCode(10,10) + 'FORMATTING: Respond in clean, plain text. Do not use markdown symbols such as #, ##, **, *, or backticks, and do not use emojis. Write short, clear paragraphs; for lists use a dash and a space.'
     let userTier = 'guest'
 
     if (user) {
@@ -141,7 +142,7 @@ systemPrompt += '\n\nWEB SEARCH:\nYou have access to a web search tool. Use it w
     }
 
     // Paid members get the flagship model; free and guest traffic runs on Sonnet (~40% cheaper)
-const aiModel = (userTier === 'unlimited' || userTier === 'pro' || userTier === 'advocate') ? 'claude-opus-4-5' : 'claude-sonnet-4-6'
+const aiModel = (userTier === 'unlimited' || userTier === 'pro' || userTier === 'advocate') ? 'claude-sonnet-4-6' : 'claude-sonnet-4-6'
 
 // Call Anthropic API
     const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
