@@ -50,6 +50,11 @@ export default function AdminDashboard() {
   const [stateForm, setStateForm] = useState({ state_code: '', state_name: '', complaint_procedures: '', additional_context: '' })
   const [stateSaving, setStateSaving] = useState(false)
   const [stateSuccess, setStateSuccess] = useState('')
+  const [orgs, setOrgs] = useState([])
+  const [orgState, setOrgState] = useState('Florida')
+  const [orgForm, setOrgForm] = useState({ type: 'pti', name: '', website: '', phone: '', description: '', sort_order: 0, is_active: true })
+  const [orgSaving, setOrgSaving] = useState(false)
+  const [orgMsg, setOrgMsg] = useState('')
 
   // Auth guard
   useEffect(() => {
@@ -61,6 +66,10 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (user?.email && isAdmin(user.email)) loadData()
   }, [user])
+
+  useEffect(() => {
+    if (tab === 'organizations' && user?.email && isAdmin(user.email)) loadOrgs(orgState)
+  }, [tab, orgState, user])
 
   const loadData = async () => {
     setDataLoading(true)
@@ -147,6 +156,61 @@ export default function AdminDashboard() {
     setStateSaving(false)
   }
 
+  const loadOrgs = async (stateName) => {
+    const code = STATE_CODES[stateName]
+    if (!code) return
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch('/api/admin/organizations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (session?.access_token || '') },
+      body: JSON.stringify({ action: 'list', state_code: code }),
+    })
+    const json = await res.json().catch(() => ({}))
+    setOrgs(json.organizations || [])
+  }
+
+  const saveOrg = async () => {
+    if (!orgForm.name || !orgForm.type) { setOrgMsg('Name and type are required.'); return }
+    setOrgSaving(true); setOrgMsg('')
+    const code = STATE_CODES[orgState]
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch('/api/admin/organizations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (session?.access_token || '') },
+      body: JSON.stringify({ action: 'save', org: { ...orgForm, state_code: code } }),
+    })
+    const json = await res.json().catch(() => ({}))
+    setOrgSaving(false)
+    if (res.ok) {
+      setOrgMsg('Saved.')
+      setOrgForm({ type: 'pti', name: '', website: '', phone: '', description: '', sort_order: 0, is_active: true })
+      loadOrgs(orgState)
+    } else {
+      setOrgMsg(json.error || 'Save failed.')
+    }
+  }
+
+  const editOrg = (o) => {
+    setOrgForm({ id: o.id, type: o.type, name: o.name, website: o.website || '', phone: o.phone || '', description: o.description || '', sort_order: o.sort_order || 0, is_active: o.is_active !== false })
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const cancelOrgEdit = () => {
+    setOrgForm({ type: 'pti', name: '', website: '', phone: '', description: '', sort_order: 0, is_active: true })
+    setOrgMsg('')
+  }
+
+  const deleteOrg = async (id) => {
+    if (!confirm('Remove this organization?')) return
+    const { data: { session } } = await supabase.auth.getSession()
+    await fetch('/api/admin/organizations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (session?.access_token || '') },
+      body: JSON.stringify({ action: 'delete', id }),
+    })
+    loadOrgs(orgState)
+  }
+
   if (loading || !user) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -199,7 +263,7 @@ export default function AdminDashboard() {
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', borderBottom: '2px solid #e5e7eb', paddingBottom: '0' }}>
-          {[['members', 'Members'], ['testimonials', 'Testimonials'], ['states', 'State Content']].map(([id, label]) => (
+          {[['members', 'Members'], ['testimonials', 'Testimonials'], ['states', 'State Content'], ['organizations', 'Organizations']].map(([id, label]) => (
             <button
               key={id}
               onClick={() => setTab(id)}
@@ -381,6 +445,113 @@ export default function AdminDashboard() {
               >
                 {stateSaving ? 'Saving...' : 'Save State Content'}
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Organizations tab */}
+        {tab === 'organizations' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '24px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: '#1a1a1a', margin: '0 0 8px' }}>{orgForm.id ? 'Edit Organization' : 'Add an Organization'}</h2>
+              <p style={{ color: '#6b7280', fontSize: '14px', margin: '0 0 20px' }}>
+                These appear on the PTI Centers and Advocacy Orgs tabs of each state page.
+              </p>
+
+              {orgMsg && (
+                <div style={{ background: orgMsg === 'Saved.' ? '#f0fdf4' : '#fef2f2', border: '1px solid ' + (orgMsg === 'Saved.' ? '#bbf7d0' : '#fecaca'), borderRadius: '10px', padding: '12px', marginBottom: '16px', fontSize: '14px', color: orgMsg === 'Saved.' ? '#16a34a' : '#dc2626' }}>
+                  {orgMsg}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                  <div style={{ flex: '1 1 200px' }}>
+                    <label style={labelStyle}>State</label>
+                    <select value={orgState} onChange={e => setOrgState(e.target.value)} style={{ ...fieldStyle, background: 'white' }}>
+                      {US_STATES.map(s => <option key={s} value={s}>{s} ({STATE_CODES[s]})</option>)}
+                    </select>
+                  </div>
+                  <div style={{ flex: '1 1 200px' }}>
+                    <label style={labelStyle}>Type</label>
+                    <select value={orgForm.type} onChange={e => setOrgForm(f => ({ ...f, type: e.target.value }))} style={{ ...fieldStyle, background: 'white' }}>
+                      <option value="pti">PTI Center</option>
+                      <option value="advocacy">Advocacy Organization</option>
+                      <option value="protection_advocacy">Protection and Advocacy Agency</option>
+                    </select>
+                  </div>
+                  <div style={{ flex: '0 0 120px' }}>
+                    <label style={labelStyle}>Sort order</label>
+                    <input type="number" value={orgForm.sort_order} onChange={e => setOrgForm(f => ({ ...f, sort_order: parseInt(e.target.value, 10) || 0 }))} style={fieldStyle} />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Name</label>
+                  <input type="text" value={orgForm.name} onChange={e => setOrgForm(f => ({ ...f, name: e.target.value }))} placeholder="Family Network on Disabilities" style={fieldStyle} />
+                </div>
+
+                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                  <div style={{ flex: '1 1 240px' }}>
+                    <label style={labelStyle}>Website</label>
+                    <input type="text" value={orgForm.website} onChange={e => setOrgForm(f => ({ ...f, website: e.target.value }))} placeholder="https://fndusa.org" style={fieldStyle} />
+                  </div>
+                  <div style={{ flex: '1 1 200px' }}>
+                    <label style={labelStyle}>Phone</label>
+                    <input type="text" value={orgForm.phone} onChange={e => setOrgForm(f => ({ ...f, phone: e.target.value }))} placeholder="1-800-825-5736" style={fieldStyle} />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Description</label>
+                  <textarea rows={3} value={orgForm.description} onChange={e => setOrgForm(f => ({ ...f, description: e.target.value }))} placeholder="Brief description of what this organization offers families." style={{ ...fieldStyle, resize: 'vertical' }} />
+                </div>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: '#374151' }}>
+                  <input type="checkbox" checked={orgForm.is_active} onChange={e => setOrgForm(f => ({ ...f, is_active: e.target.checked }))} />
+                  Show on the public state page
+                </label>
+
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button onClick={saveOrg} disabled={orgSaving} style={{ background: orgSaving ? '#93afc4' : '#1a5276', color: 'white', border: 'none', borderRadius: '10px', padding: '12px 24px', fontSize: '14px', fontWeight: '600', cursor: orgSaving ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
+                    {orgSaving ? 'Saving...' : orgForm.id ? 'Update Organization' : 'Add Organization'}
+                  </button>
+                  {orgForm.id && (
+                    <button onClick={cancelOrgEdit} style={{ background: 'white', color: '#6b7280', border: '1px solid #d1d5db', borderRadius: '10px', padding: '12px 24px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' }}>
+                      Cancel
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
+              <div style={{ padding: '16px 20px', borderBottom: '1px solid #e5e7eb', fontSize: '14px', fontWeight: '600', color: '#374151' }}>
+                {orgState} organizations ({orgs.length})
+              </div>
+              {orgs.length === 0 ? (
+                <div style={{ padding: '40px', textAlign: 'center', color: '#9ca3af', fontSize: '14px' }}>No organizations for {orgState} yet. Add one above.</div>
+              ) : (
+                <div>
+                  {orgs.map(o => (
+                    <div key={o.id} style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', padding: '16px 20px', borderBottom: '1px solid #f3f4f6' }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                          <span style={{ fontWeight: '600', fontSize: '14px', color: '#1a1a1a' }}>{o.name}</span>
+                          <span style={{ fontSize: '11px', background: '#f3e8ff', color: '#7c3aed', padding: '2px 8px', borderRadius: '50px' }}>{o.type === 'pti' ? 'PTI' : o.type === 'protection_advocacy' ? 'P and A' : 'Advocacy'}</span>
+                          {!o.is_active && <span style={{ fontSize: '11px', background: '#f3f4f6', color: '#9ca3af', padding: '2px 8px', borderRadius: '50px' }}>Hidden</span>}
+                        </div>
+                        {o.description && <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '4px' }}>{o.description}</div>}
+                        <div style={{ fontSize: '12px', color: '#9ca3af' }}>{[o.phone, o.website].filter(Boolean).join('  -  ')}</div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                        <button onClick={() => editOrg(o)} style={{ padding: '6px 14px', borderRadius: '8px', border: '1px solid #d1d5db', background: 'white', color: '#374151', fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit' }}>Edit</button>
+                        <button onClick={() => deleteOrg(o.id)} style={{ padding: '6px 14px', borderRadius: '8px', border: 'none', background: '#fef2f2', color: '#dc2626', fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit' }}>Remove</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
