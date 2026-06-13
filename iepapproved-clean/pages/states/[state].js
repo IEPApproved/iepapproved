@@ -180,6 +180,7 @@ export default function StatePage() {
                   <div style={s.overviewGrid}>
                     <div style={s.overviewCard}>
                       <h3 style={s.overviewCardTitle}>Complaint Agency</h3>
+                      <p style={s.overviewCardDef}>The state office that investigates IEP violations and where you file a formal complaint.</p>
                       <p style={s.overviewCardText}>
                         {stateData.complaint_agency || 'Contact your State Department of Education'}
                       </p>
@@ -192,6 +193,7 @@ export default function StatePage() {
                     </div>
                     <div style={s.overviewCard}>
                       <h3 style={s.overviewCardTitle}>PTI Centers</h3>
+                      <p style={s.overviewCardDef}>Your federally funded parent center, with free training and one-on-one help.</p>
                       <p style={s.overviewCardText}>
                         {stateData.pti_centers && stateData.pti_centers.length > 0
                           ? stateData.pti_centers.length + ' federally-funded center(s) serving ' + stateName + ' families.'
@@ -203,6 +205,7 @@ export default function StatePage() {
                     </div>
                     <div style={s.overviewCard}>
                       <h3 style={s.overviewCardTitle}>State Law</h3>
+                      <p style={s.overviewCardDef}>Protections your state adds on top of federal IDEA.</p>
                       <p style={s.overviewCardText}>
                         {stateData.state_laws_exceeding_federal
                           ? stateName + ' has additional protections beyond federal IDEA.'
@@ -214,6 +217,7 @@ export default function StatePage() {
                     </div>
                     <div style={s.overviewCard}>
                       <h3 style={s.overviewCardTitle}>Ask Ada</h3>
+                      <p style={s.overviewCardDef}>Instant answers about your child's rights, specific to your state.</p>
                       <p style={s.overviewCardText}>
                         Ask Ada a {stateName}-specific question about your child's IEP rights.
                       </p>
@@ -510,6 +514,7 @@ const s = {
   overviewGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: '16px' },
   overviewCard: { backgroundColor: '#1a0f2e', border: '1px solid rgba(212,168,67,0.2)', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' },
   overviewCardTitle: { color: '#D4A843', fontSize: '14px', fontWeight: '700', fontFamily: 'Outfit,sans-serif', margin: 0 },
+  overviewCardDef: { color: 'rgba(184,168,208,0.75)', fontSize: '12px', fontStyle: 'italic', lineHeight: '1.5', fontFamily: 'Outfit,sans-serif', margin: '0 0 8px' },
   overviewCardText: { color: '#b8a8d0', fontSize: '13px', lineHeight: '1.6', fontFamily: 'Outfit,sans-serif', margin: 0, flex: 1 },
   overviewCardDetail: { color: 'rgba(184,168,208,0.6)', fontSize: '12px', fontFamily: 'Outfit,sans-serif', margin: 0 },
   overviewCardLink: { background: 'none', border: 'none', color: '#D4A843', fontSize: '13px', fontFamily: 'Outfit,sans-serif', fontWeight: '700', cursor: 'pointer', padding: 0, textAlign: 'left' },
