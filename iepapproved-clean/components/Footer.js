@@ -22,8 +22,8 @@ export default function Footer() {
           </Link>
           <p style={s.tagline}>
             {es
-              ? 'El conocimiento es poder. La colaboración es progreso. Juntos — el IEP se APRUEBA.'
-              : 'Knowledge is power. Partnership is progress. Together — the IEP gets APPROVED.'}
+              ? 'El conocimiento es poder. La colaboración es progreso. Juntos — convertimos los derechos en REALIDAD.'
+              : 'Knowledge is power. Partnership is progress. Together — we turn rights into REALITY.'}
           </p>
           <div style={s.socialRow}>
             <a href="https://www.tiktok.com/@iepapproved.com" target="_blank" rel="noopener noreferrer" style={s.socialLink}>TikTok</a>
