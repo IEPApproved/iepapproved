@@ -58,6 +58,31 @@ return res.status(400).json({ error: 'Invalid plan' })
       console.error('Profile pre-create error (non-fatal):', upsertError.message)
     }
 
+    // If this email already has an active subscription, switch its plan in place
+    // instead of creating a second one (prevents double-charging on upgrade).
+    // Plan-switch check:
+    try {
+      const existing = await stripe.customers.list({ email, limit: 1 })
+      const customer = existing?.data?.[0]
+      if (customer) {
+        const subs = await stripe.subscriptions.list({ customer: customer.id, status: 'active', limit: 1 })
+        const sub = subs?.data?.[0]
+        if (sub) {
+          const item = sub.items.data[0]
+          if (item.price.id !== priceId) {
+            await stripe.subscriptions.update(sub.id, {
+              items: [{ id: item.id, price: priceId }],
+              proration_behavior: 'create_prorations',
+            })
+          }
+          // Tier sync is handled by the customer.subscription.updated webhook.
+          return res.status(200).json({ url: 'https://www.iepapproved.com/ada' })
+        }
+      }
+    } catch (switchErr) {
+      console.error('Plan-switch failed, falling back to new checkout:', switchErr.message)
+    }
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'subscription',
