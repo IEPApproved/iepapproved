@@ -132,7 +132,7 @@ async function sendWelcomeEmail(email, name, lang) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'Kimberly at IEP Approved <kimberly@iepapproved.com>',
+      from: 'IEP Approved <info@iepapproved.com>',
       to: [email],
       subject,
       html: isSpanish ? welcomeEmailES(name) : welcomeEmailEN(name),
