@@ -57,6 +57,7 @@ alert('Could not open the billing portal. Please contact info@iepapproved.com.')
 
 const navLinks = [
     { label: lang === 'es' ? 'Cómo Funciona' : 'How It Works', href: '/#how-it-works' },
+    { label: lang === 'es' ? 'Pregúntale a Ada' : 'Ask Ada', href: '/ada' },
 { label: lang === 'es' ? 'Por Estado' : 'States', href: '/states' },
     { label: lang === 'es' ? 'Tienda' : 'Storefront', href: '/storefront' },
     { label: lang === 'es' ? 'Comunidad' : 'Community', href: '/community' },
