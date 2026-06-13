@@ -278,6 +278,29 @@ console.error('Line item lookup error (defaulting to unlimited):', liErr.message
         break
       }
 
+      // Plan changed (upgrade or downgrade via billing portal) - sync tier
+      case 'customer.subscription.updated': {
+        const sub = event.data.object
+        if (sub.status !== 'active' && sub.status !== 'trialing') break
+        const customer = await stripe.customers.retrieve(sub.customer)
+        if (customer.deleted || !customer.email) break
+        const priceId = sub.items?.data?.[0]?.price?.id
+        const newTier = PRICE_TIERS[priceId]
+        if (!newTier) break
+        await supabase
+          .from('profiles')
+          .update({
+            tier: newTier,
+            subscription_status: 'active',
+            stripe_customer_id: sub.customer,
+            stripe_subscription_id: sub.id,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('email', customer.email)
+        console.log('Plan synced:', customer.email, newTier)
+        break
+      }
+
       default:
         console.log(`Unhandled: ${event.type}`)
     }
