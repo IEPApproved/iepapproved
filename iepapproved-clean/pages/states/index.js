@@ -31,7 +31,7 @@ const STATES = [
 export default function StatesHub() {
   const { user, profile } = useAuth();
   const [search, setSearch] = useState('');
-  const isUnlimited = profile?.tier === 'unlimited';
+  const isUnlimited = profile?.tier === 'pro' || profile?.tier === 'advocate';
   const filtered = STATES.filter(s =>
     s.name.toLowerCase().includes(search.toLowerCase()) ||
     s.code.toLowerCase().includes(search.toLowerCase())
@@ -48,11 +48,11 @@ export default function StatesHub() {
         <div style={s.heroInner}>
           <div style={s.eyebrow}>STATE-BY-STATE RESOURCES</div>
           <h1 style={s.heroTitle}>Know your state's IEP laws.<br /><em style={s.heroGold}>Advocate with confidence.</em></h1>
-          <p style={s.heroSub}>Federal law sets the floor. Your state may go further — with stricter timelines, additional protections, and local resources only Ada Unlimited members can access.</p>
+          <p style={s.heroSub}>Federal law sets the floor. Your state may go further — with stricter timelines, additional protections, and local resources only IEP Pro members can access.</p>
           {!isUnlimited && (
             <div style={s.unlockBanner}>
-              <span style={s.unlockText}>State-specific resources are available to Ada Unlimited members.</span>
-              <Link href="/signup" style={s.unlockBtn}>Get Ada Unlimited — $4.99/mo</Link>
+              <span style={s.unlockText}>State-specific resources are available to IEP Pro members.</span>
+              <Link href="/signup" style={s.unlockBtn}>Get IEP Pro — $9.99/mo</Link>
             </div>
           )}
         </div>
@@ -93,8 +93,8 @@ export default function StatesHub() {
           </div>
           {!isUnlimited && (
             <div style={s.bottomCta}>
-              <p style={s.bottomCtaText}>Ada Unlimited unlocks all 50 state pages, plus unlimited questions to Ada.</p>
-              <Link href="/signup" style={s.bottomCtaBtn}>Get Ada Unlimited — $4.99/month</Link>
+              <p style={s.bottomCtaText}>IEP Pro unlocks all 50 state pages, plus unlimited questions to Ada.</p>
+              <Link href="/signup" style={s.bottomCtaBtn}>Get IEP Pro — $9.99/month</Link>
               <p style={s.bottomCtaFine}>Cancel anytime. No contracts.</p>
             </div>
           )}
